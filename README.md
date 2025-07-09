@@ -1,282 +1,231 @@
-# VTU Backend Service: Seamless Digital Transactions 🌐
+# **VTU Backend Service** ⚡
 
-This project is a robust and secure backend service designed to power a Virtual Top-Up (VTU) platform. It facilitates a range of digital transactions including data subscriptions, airtime top-ups, electricity bill payments, and cable TV subscriptions. Built with Node.js and Express.js, it emphasizes clean architecture, secure authentication, and resilient database connectivity, making it a reliable foundation for any digital utility service.
+This project powers a robust and secure backend API for a Virtual Top-Up (VTU) platform, enabling users to seamlessly perform various digital transactions. From purchasing airtime and data to paying utility bills, this service provides a comprehensive solution for managing virtual transactions with ease. Built with Node.js and Express, it integrates with external payment gateways and service providers, ensuring a reliable and efficient experience.
 
----
+## 🚀 Installation
 
-## 🚀 Getting Started
+To get this project up and running on your local machine, follow these steps:
 
-Follow these steps to get a local copy of the project up and running on your machine.
+### ⚙️ Prerequisites
 
-### Prerequisites
-
-Before you begin, ensure you have the following installed:
-
+Make sure you have the following installed:
 *   Node.js (LTS version recommended)
-*   npm (comes with Node.js)
-*   MongoDB (local instance or a cloud-hosted one like MongoDB Atlas)
-*   Git
+*   MongoDB
 
-### Installation
+### 📦 Clone the Repository
 
-1.  **Clone the Repository**:
-    ```bash
-    git clone https://github.com/Minister-Isaac/Vtu-Backend.git
-    ```
-2.  **Navigate to the Project Directory**:
-    ```bash
-    cd Vtu-Backend
-    ```
-3.  **Install Dependencies**:
-    ```bash
-    npm install
-    ```
-4.  **Configure Environment Variables**:
-    Create a `.env` file in the root of the project and add the following variables. Replace the placeholder values with your actual credentials and settings.
-    ```env
-    PORT=3000
-    MONGODB_URI=your_mongodb_connection_string
-    JWT_SECRET_KEY=your_strong_jwt_secret
-    EXTERNAL_BACKEND_DOMAIN=https://sandbox.vtpass.com/api # Example for an external API
-    EXTERNAL_BACKEND_API_KEY=your_external_api_token
-    NODE_ENV=development # or production
-    ```
-    *   `PORT`: The port on which your server will run.
-    *   `MONGODB_URI`: Your MongoDB connection string.
-    *   `JWT_SECRET_KEY`: A secret key for signing and verifying JSON Web Tokens.
-    *   `EXTERNAL_BACKEND_DOMAIN`: The base URL of the external VTU service provider (e.g., VTPass).
-    *   `EXTERNAL_BACKEND_API_KEY`: Your API key for authenticating with the external service.
-    *   `NODE_ENV`: Set to `development` for local development or `production` for deployment.
-5.  **Start the Server**:
-    To start the server in development mode with `nodemon` (auto-reloads on file changes):
-    ```bash
-    npm run dev
-    ```
-    To start the server in production mode:
-    ```bash
-    npm start
-    ```
-    The server will connect to MongoDB and start listening on the specified `PORT`. You should see a log message indicating the server is running.
+Start by cloning the repository to your local machine:
 
----
+```bash
+git clone https://github.com/Minister-Isaac/Vtu-Backend.git
+cd Vtu-Backend
+```
+
+### 🛠️ Install Dependencies
+
+Navigate into the project directory and install the required npm packages:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+### 🔑 Environment Variables
+
+Create a `.env` file in the root directory of the project and populate it with your environment-specific variables. This project uses:
+
+*   `PORT`: The port number the server will listen on (e.g., `5000`).
+*   `MONGODB_URI`: Your MongoDB connection string.
+*   `JWT_SECRET_KEY`: A strong secret key for JWT authentication.
+*   `MONNIFY_API_KEY`: Your Monnify API key for payment processing.
+*   `MONNIFY_SECRET_KEY`: Your Monnify Secret Key.
+*   `MONNIFY_CONTRACT_CODE`: Your Monnify Contract Code.
+*   `EXTERNAL_BACKEND_DOMAIN`: The base URL of the external backend service for VTU and bill payments.
+*   `EXTERNAL_BACKEND_API_KEY`: The API key for the external backend service.
+*   `FRONTEND_DOMAIN`: The URL of your frontend application (for payment redirects).
+*   `NODE_ENV`: Set to `development` or `production`.
+
+Example `.env` file:
+```
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/vtu_db
+JWT_SECRET_KEY=your_very_secret_jwt_key
+MONNIFY_API_KEY=mk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+MONNIFY_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+MONNIFY_CONTRACT_CODE=your_contract_code
+EXTERNAL_BACKEND_DOMAIN=https://your-external-vtu-api.com/api
+EXTERNAL_BACKEND_API_KEY=your_external_api_key
+FRONTEND_DOMAIN=http://localhost:3000
+NODE_ENV=development
+```
+
+### ▶️ Run the Server
+
+Once the dependencies are installed and the environment variables are set, you can start the server:
+
+For development with hot-reloading:
+```bash
+npm run dev
+```
+
+For production:
+```bash
+npm start
+```
+
+The server will start on the port specified in your `.env` file. You should see a message in the console indicating the server is running and connected to MongoDB.
 
 ## 💡 Usage
 
-This API provides a set of RESTful endpoints to manage users and facilitate various digital transactions.
+This API provides a suite of endpoints for user authentication, account management, and virtual transactions. Below are some common usage flows:
 
-### Authentication Endpoints
+### User Authentication
 
-*   **Register User**: Create a new user account.
-    *   **Method**: `POST`
-    *   **URL**: `/api/v1/auth/register`
-    *   **Body**:
-        ```json
-        {
-          "full_name": "John Doe",
-          "username": "johndoe",
-          "email": "john.doe@example.com",
-          "phone": "08012345678",
-          "address": "123 Main St, Anytown",
-          "password": "StrongPassword123!",
-          "referral_username": "referrer_user" (optional)
-        }
-        ```
-*   **Login User**: Authenticate and receive `accessToken` and `refreshToken` cookies.
-    *   **Method**: `POST`
-    *   **URL**: `/api/v1/auth/login`
-    *   **Body**:
-        ```json
-        {
-          "username": "johndoe",
-          "password": "StrongPassword123!"
-        }
-        ```
-*   **Logout User**: Invalidate access and refresh tokens.
-    *   **Method**: `POST`
-    *   **URL**: `/api/v1/auth/logout`
-    *   **Headers**: Requires `Authorization: Bearer <accessToken>` or `accessToken` cookie.
+*   **Register a new user:**
+    `POST /api/v1/auth/register`
+    Body: `{ "full_name": "...", "username": "...", "email": "...", "phone": "...", "address": "...", "password": "...", "referral_username": "..." }`
+*   **Log in a user:**
+    `POST /api/v1/auth/login`
+    Body: `{ "username": "...", "password": "..." }`
+    Successful login will set `accessToken` and `refreshToken` cookies and return an `accessToken` in the response body. This token is crucial for authenticating subsequent requests.
+*   **Log out a user:**
+    `POST /api/v1/auth/logout`
+    Requires authentication. Clears access and refresh tokens.
 
-*   **Get User Details**: Get user details, theres no need to save it to localstorage, just call this endpoint everytime u need ur data.
-    *   **Method**: `GET`
-    *   **URL**: `/api/v1/subscribe/me`
-    *   **Headers**: Requires `Authorization: Bearer <accessToken>` or `accessToken` cookie.
+### Account Funding
 
-### Transaction Endpoints (Authenticated)
+To fund a user's wallet:
 
-All transaction endpoints require an authenticated user. Ensure you include the `accessToken` in the `Authorization` header (`Bearer <token>`) or as a cookie after logging in.
+*   **Initialize a funding transaction:**
+    `POST /api/v1/payment/fund-wallet`
+    Requires authentication.
+    Body: `{ "email": "user@example.com", "amount": 5000 }`
+    This will return a `checkoutUrl` from Monnify where the user can complete the payment.
 
-#### Data Services
+### Virtual Top-Up and Bill Payments
 
-*   **Buy Data Subscription**: Purchase a data plan for a specified network and phone number.
-    *   **Method**: `POST`
-    *   **URL**: `/api/v1/subscribe/data`
-    *   **Body**:
-        ```json
-        {
-          "network": 1,
-          "phone": "08012345678",
-          "plan": 500,
-          "ported_number": true
-        }
-        ```
-*   **Get All Data Transactions**: Retrieve a history of all data transactions.
-    *   **Method**: `GET`
-    *   **URL**: `/api/v1/subscribe/data-history`
-*   **Query Data Transaction**: Check the status of a specific data transaction.
-    *   **Method**: `GET`
-    *   **URL**: `/api/v1/subscribe/query-data/:transactionId`
+All transaction endpoints require authentication via the `accessToken` (either in `Authorization` header as `Bearer Token` or as an `httpOnly` cookie).
 
-#### Airtime Services
+*   **Buy Data Subscription:**
+    `POST /api/v1/subscribe/data`
+    Body: `{ "network": 1, "phone": "08012345678", "plan": 358, "ported_number": false }`
+*   **Buy Airtime Subscription:**
+    `POST /api/v1/subscribe/airtime`
+    Body: `{ "network": 1, "phone": "08012345678", "amount": 500, "airtime_type": "VTU", "ported_number": false }`
+*   **Pay Electricity Bills:**
+    `POST /api/v1/subscribe/electricity`
+    Body: `{ "disco_name": "Ikeja Disco", "amount": 5000, "meter_number": 12345678901, "meter_type": "Prepaid" }`
+*   **Buy Cable Subscription:**
+    `POST /api/v1/subscribe/cable`
+    Body: `{ "cable_name": "GOtv", "cable_plan": "GOtv Max", "smart_card_number": 12345678901, "amount": 8500 }`
 
-*   **Buy Airtime Subscription**: Top-up airtime for a specified network and phone number.
-    *   **Method**: `POST`
-    *   **URL**: `/api/v1/subscribe/airtime`
-    *   **Body**:
-        ```json
-        {
-          "network": 3,
-          "phone": "07012345678",
-          "amount": 1000,
-          "airtime_type": "VTU",
-          "ported_number": true
-        }
-        ```
-*   **Query Airtime Transaction**: Check the status of a specific airtime transaction.
-    *   **Method**: `GET`
-    *   **URL**: `/api/v1/subscribe/query-airtime/:transactionId`
+### Transaction History & Queries
 
-#### Electricity Services
+*   **Get all data transactions for a user:**
+    `GET /api/v1/subscribe/data-history`
+    Requires authentication.
+*   **Query a specific data transaction:**
+    `GET /api/v1/subscribe/query-data/:transactionId`
+    Requires authentication.
+*   **Query a specific airtime transaction:**
+    `GET /api/v1/subscribe/query-airtime/:transactionId`
+    Requires authentication.
+*   **Query a specific electricity bill:**
+    `GET /api/v1/subscribe/query-electricity-bill/:transactionId`
+    Requires authentication.
+*   **Query a specific cable subscription:**
+    `GET /api/v1/subscribe/query-cable-subscription/:transactionId`
+    Requires authentication.
 
-*   **Pay Electricity Bills**: Pay electricity bills for a given disco and meter.
-    *   **Method**: `POST`
-    *   **URL**: `/api/v1/subscribe/electricity`
-    *   **Body**:
-        ```json
-        {
-          "disco_name": "Ikeja Disco",
-          "amount": 5000,
-          "meter_number": 12345678901,
-          "meter_type": "Prepaid",
-          "userId": "your_user_id"
-        }
-        ```
-*   **Query Electricity Bill**: Check the status of a specific electricity bill payment.
-    *   **Method**: `GET`
-    *   **URL**: `/api/v1/subscribe/query-electricity/:transactionId` *(Note: Based on controller, actual route in code is `/query-electricity-bill` without `transactionId`, but for querying by ID, a parameter is logical.)*
-*   **Validate Meter Number**: Verify a meter number before payment.
-    *   **Method**: `GET`
-    *   **URL**: `/api/v1/subscribe/validate-meter?meternumber=12345678901&disconame=Ikeja%20Disco&metertype=Prepaid`
+### Utility Endpoints
 
-#### Cable TV Services
-
-*   **Buy Cable Subscription**: Subscribe to a cable TV plan.
-    *   **Method**: `POST`
-    *   **URL**: `/api/v1/subscribe/cable`
-    *   **Body**:
-        ```json
-        {
-          "cable_name": "Dstv",
-          "cable_plan": "Premium",
-          "smart_card_number": 987654321,
-          "userId": "your_user_id",
-          "amount": 15000
-        }
-        ```
-*   **Query Cable Subscription**: Check the status of a specific cable subscription.
-    *   **Method**: `GET`
-    *   **URL**: `/api/v1/subscribe/query-cable/:transactionId` *(Note: Based on controller, actual route in code is `/query-electricity-bill` without `transactionId`, but for querying by ID, a parameter is logical.)*
-*   **Validate UIC (Smart Card)**: Verify a smart card number before subscription.
-    *   **Method**: `GET`
-    *   **URL**: `/api/v1/subscribe/validate-uic?smart_card_number=987654321&cable_name=Dstv`
-
-
-### Plans and Lists
-
-You can retrieve lists of available plans and networks without authentication:
-
-*   **Get Data Plans**: `GET http://localhost:5000/api/v1/plans/data-plans`
-*   **Get Networks**: `GET http://localhost:5000/api/v1/plans/networks`
-*   **Get Cable Providers**: `GET http://localhost:5000/api/v1/plans/cables`
-*   **Get Cable Plans**: `GET http://localhost:5000/api/v1/plans/cable-plans`
-*   **Get Electricity Discos**: `GET http://localhost:5000/api/v1/plans/discos`
-
----
+*   **Validate Cable TV Smart Card:**
+    `GET /api/v1/subscribe/validate-uic?smart_card_number=...&cable_name=...`
+    Requires authentication.
+*   **Validate Electricity Meter:**
+    `GET /api/v1/subscribe/validate-meter?meternumber=...&disconame=...&metertype=...`
+    Requires authentication.
+*   **Get available data plans:**
+    `GET /api/v1/plans/data-plans`
+*   **Get available network providers:**
+    `GET /api/v1/plans/networks`
+*   **Get available cable providers:**
+    `GET /api/v1/plans/cables`
+*   **Get available cable plans:**
+    `GET /api/v1/plans/cable-plans`
+*   **Get available electricity distribution companies (discos):**
+    `GET /api/v1/plans/discos`
 
 ## ✨ Features
 
-This backend service is packed with features to provide a comprehensive and secure VTU experience:
+*   **User Authentication & Authorization**: Secure user registration, login, and logout using JWT tokens and refresh tokens. Argon2 for robust password hashing.
+*   **Account Management**: Dedicated user accounts with wallet balance, total funding, and referral tracking.
+*   **Virtual Top-Up Services**:
+    *   **Data Subscription**: Purchase data plans for various networks (MTN, GLO, 9MOBILE, AIRTEL).
+    *   **Airtime Purchase**: Top up airtime across different networks.
+*   **Bill Payment Services**:
+    *   **Electricity Bills**: Pay for electricity (prepaid/postpaid) across different distribution companies.
+    *   **Cable TV Subscription**: Subscribe to popular cable TV services (GOtv, Dstv, Startimes).
+*   **Third-Party API Integration**: Seamless integration with external APIs for Monnify payment processing and VTU/bill payment services.
+*   **Transaction Management**: Comprehensive tracking of all user transactions with detailed metadata.
+*   **Input Validation**: Robust request body validation using Joi schemas to ensure data integrity and security.
+*   **Error Handling**: Centralized error handling middleware for consistent and informative error responses.
+*   **Logging**: Utilizes Pino for structured and efficient logging, aiding in debugging and monitoring.
+*   **Security Best Practices**: Implementation of `helmet` for HTTP header security and `cors` for controlled cross-origin resource sharing.
+*   **Database Management**: MongoDB integration with Mongoose for efficient data modeling and persistence, including connection retry logic for resilience.
 
-*   **User Authentication & Authorization**: Secure user registration, login, and logout with Argon2 hashing for passwords and JWTs for token-based authentication.
-*   **Account Management**: Manages user wallets, tracks funding, and calculates referral bonuses, providing a holistic view of user finances.
-*   **Diverse Transaction Services**: Enables seamless purchase of data, airtime, electricity, and cable TV subscriptions through integration with external VTU APIs.
-*   **Transaction Tracking**: Records all user transactions with detailed metadata and unique references, ensuring traceability.
-*   **Robust Input Validation**: Utilizes Joi schemas to rigorously validate all incoming request bodies, preventing malformed data and enhancing security.
-*   **Centralized Logging**: Implements Pino for structured and efficient logging, offering clear insights into server operations and aiding in debugging.
-*   **Error Handling**: Comprehensive error handling middleware ensures graceful responses and prevents application crashes from unhandled exceptions.
-*   **Environment Configuration**: Manages sensitive information and application settings using `.env` files for secure and flexible deployment across different environments.
-*   **Database Resilience**: Features connection retry logic for MongoDB, ensuring the application can recover from transient database connectivity issues.
+## 💻 Technologies Used
 
----
-
-## 🛠️ Technologies Used
-
-| Technology         | Description                                     | Link                                            |
-| :----------------- | :---------------------------------------------- | :---------------------------------------------- |
-| **Node.js**        | JavaScript runtime for backend development      | [nodejs.org](https://nodejs.org/)               |
-| **Express.js**     | Fast, unopinionated, minimalist web framework   | [expressjs.com](https://expressjs.com/)         |
-| **MongoDB**        | NoSQL document database                         | [mongodb.com](https://www.mongodb.com/)         |
-| **Mongoose**       | MongoDB object modeling for Node.js             | [mongoosejs.com](https://mongoosejs.com/)       |
-| **JSON Web Tokens (JWT)** | Securely transmit information between parties | [jwt.io](https://jwt.io/)                       |
-| **Argon2**         | State-of-the-art password hashing function      | [argon2.org](https://argon2.org/)               |
-| **Joi**            | Schema description language and validator       | [joi.dev](https://joi.dev/)                     |
-| **Pino**           | Extremely fast Node.js logger                   | [getpino.io](https://getpino.io/)               |
-| **Axios**          | Promise-based HTTP client                       | [axios-http.com](https://axios-http.com/)       |
-| **Dotenv**         | Loads environment variables from a `.env` file  | [npmjs.com/package/dotenv](https://www.npmjs.com/package/dotenv) |
-| **Helmet**         | Secures Express apps by setting various HTTP headers | [helmetjs.info](https://helmetjs.info/)      |
-| **Cookie-parser**  | Parse Cookie header and populate `req.cookies` | [npmjs.com/package/cookie-parser](https://www.npmjs.com/package/cookie-parser) |
-| **CORS**           | Provides a Connect/Express middleware that can be used to enable CORS with various options | [npmjs.com/package/cors](https://www.npmjs.com/package/cors) |
-| **Async-retry**    | Retries an async function until it succeeds     | [npmjs.com/package/async-retry](https://www.npmjs.com/package/async-retry) |
-
----
+| Technology | Description | Link |
+| :--------- | :---------- | :--- |
+| Node.js | JavaScript runtime environment | [https://nodejs.org/](https://nodejs.org/) |
+| Express.js | Fast, unopinionated, minimalist web framework for Node.js | [https://expressjs.com/](https://expressjs.com/) |
+| MongoDB | NoSQL database | [https://www.mongodb.com/](https://www.mongodb.com/) |
+| Mongoose | MongoDB object data modeling (ODM) for Node.js | [https://mongoosejs.com/](https://mongoosejs.com/) |
+| JSON Web Tokens (JWT) | Compact, URL-safe means of representing claims to be transferred between two parties | [https://jwt.io/](https://jwt.io/) |
+| Argon2 | Password hashing function | [https://www.npmjs.com/package/argon2](https://www.npmjs.com/package/argon2) |
+| Joi | Powerful schema description language and data validator for JavaScript | [https://joi.dev/](https://joi.dev/) |
+| Axios | Promise-based HTTP client for the browser and Node.js | [https://axios-http.com/](https://axios-http.com/) |
+| Pino | Extremely fast, Node.js logger | [https://getpino.io/](https://getpino.io/) |
+| Dotenv | Loads environment variables from a `.env` file | [https://www.npmjs.com/package/dotenv](https://www.npmjs.com/package/dotenv) |
+| Cookie-Parser | Parse Cookie header and populate `req.cookies` | [https://www.npmjs.com/package/cookie-parser](https://www.npmjs.com/package/cookie-parser) |
+| CORS | Node.js CORS middleware | [https://www.npmjs.com/package/cors](https://www.npmjs.com/package/cors) |
+| Helmet | Helps secure Express apps by setting various HTTP headers | [https://helmetjs.github.io/](https://helmetjs.github.io/) |
+| Vercel | Cloud platform for static sites and serverless functions | [https://vercel.com/](https://vercel.com/) |
+| Monnify API | Payment gateway for online transactions | [https://monnify.com/](https://monnify.com/) |
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! If you're looking to contribute, please follow these guidelines:
+Contributions are always welcome! If you'd like to contribute to this project, please follow these guidelines:
 
-*   ✨ **Fork the repository** and clone it to your local machine.
-*   🌿 Create a new branch for your feature or bug fix: `git checkout -b feature/your-feature-name` or `bugfix/issue-description`.
-*   💻 Make your changes, ensuring they adhere to the project's coding style.
-*   🧪 Write unit and/or integration tests for your changes where applicable.
-*   ✅ Commit your changes with a clear and concise message.
-*   ⬆️ Push your branch to your forked repository.
-*   🚀 Open a Pull Request (PR) to the `main` branch of this repository. Provide a detailed description of your changes and why they are necessary.
+*   ✨ **Fork the repository**: Create your own fork of the project.
+*   🌿 **Create a new branch**: Branch out from `main` for your feature or bug fix (e.g., `feature/add-payment-method`, `bugfix/fix-auth-issue`).
+*   💻 **Make your changes**: Write clear, concise code following the existing style.
+*   🧪 **Write tests**: If applicable, ensure your changes are covered by tests.
+*   📝 **Update documentation**: Reflect any changes in functionality or API endpoints in the README or relevant documentation.
+*   ⬆️ **Commit your changes**: Write descriptive commit messages.
+*   🚀 **Push to your branch**: Push your changes to your forked repository.
+*   🗣️ **Open a Pull Request**: Submit a pull request to the `main` branch of this repository, clearly describing your changes and their purpose.
 
----
-
-## 📄 License
+## 📜 License
 
 This project is licensed under the ISC License.
 
----
+## ✍️ Author Info
 
-## 👨‍💻 Author Info
-
-*   **Isaac Okoro**
-    *   GitHub: [@Minister-Isaac](https://github.com/Minister-Isaac)
-    *   LinkedIn: [Your LinkedIn Profile](https://www.linkedin.com/in/yourusername/)
-    *   Twitter: [@YourTwitterHandle](https://twitter.com/YourTwitterHandle)
+*   **Your Name**
+    *   GitHub: [https://github.com/Minister-Isaac](https://github.com/Minister-Isaac)
+    *   LinkedIn: [https://linkedin.com/in/yourprofile](https://linkedin.com/in/yourprofile)
+    *   Twitter: [https://twitter.com/yourhandle](https://twitter.com/yourhandle)
 
 ---
 
-## Badges
-
-[![Node.js](https://img.shields.io/badge/Node.js-18.x-green?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-16.x-brightgreen?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Express.js](https://img.shields.io/badge/Express.js-5.x-blue?logo=express&logoColor=white)](https://expressjs.com/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-4.x%2B-green?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-4.x-green?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Mongoose](https://img.shields.io/badge/Mongoose-8.x-orange?logo=mongoose&logoColor=white)](https://mongoosejs.com/)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
-[![Dependencies](https://img.shields.io/david/Minister-Isaac/Vtu-Backend.svg)](https://david-dm.org/Minister-Isaac/Vtu-Backend)
-[![Dev Dependencies](https://img.shields.io/david/dev/Minister-Isaac/Vtu-Backend.svg)](https://david-dm.org/Minister-Isaac/Vtu-Backend?type=dev)
-
----
+[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel&logoColor=white)](https://vercel.com/)
 
 [![Readme was generated by Dokugen](https://img.shields.io/badge/Readme%20was%20generated%20by-Dokugen-brightgreen)](https://www.npmjs.com/package/dokugen)
