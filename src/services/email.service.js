@@ -51,7 +51,6 @@ const sendEmailVerification = async (email) => {
         `
     })
   } catch (error) {
-    console.error("Error sending mail", error)
     throw new Error("Error Sending Mail", error)
   }
 }
