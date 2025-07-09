@@ -5,7 +5,7 @@ dotenv.config()
 
 export const authenticateUser = (req, res, next) => {
   const accessToken = req.cookies.accessToken || req.headers.authorization?.split(" ")[1]
-
+  const refreshToken = req.cookies.accessToken 
   if (!accessToken || typeof accessToken !== "string") {
      res.status(401).json({ message: "Unauthorized. No token provided." })
      return 

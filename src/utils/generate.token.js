@@ -38,7 +38,7 @@ export const generateMailToken = (_id, email) => {
     },
     process.env.JWT_SECRET_KEY,
     {
-      expiresIn: "10m",
+      expiresIn: "30m",
     }
   )
 

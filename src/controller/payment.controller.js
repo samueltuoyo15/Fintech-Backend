@@ -7,9 +7,7 @@ import logger from "../utils/logger.js"
 import dotenv from "dotenv"
 dotenv.config()
 
-
 const MONNIFY_SECRET_KEY=process.env.MONNIFY_SECRET_KEY
-
 const verifyTransaction = async (req, res) => {
     const signature = req.headers["monnify-signature"]
     const payload = JSON.stringify(req.body)
@@ -28,7 +26,6 @@ const verifyTransaction = async (req, res) => {
     try {
         const reference = eventData.paymentReference
         const amountPaid = parseFloat(eventData.amountPaid)
-        
         const transaction = await Transaction.findOne({ reference })
         if(!transaction){
             logger.warn(`transaction not found for reference: ${reference}`)
@@ -39,7 +36,6 @@ const verifyTransaction = async (req, res) => {
             logger.warn(`Transaction already marked successful: ${reference}`)
             return res.status(200).json({ message: "Transaction has been proccessed ealier"})
         }
-
         const account = await Account.findOne({ user: transaction.user })
         if(!account){
              logger.warn("Account does not exist")
