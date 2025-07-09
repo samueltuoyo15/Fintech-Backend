@@ -14,7 +14,7 @@ const verifyTransaction = async (req, res) => {
     const signature = req.headers["monnify-signature"]
     const payload = JSON.stringify(req.body)
 
-    const expectedSignature = crytpo.createHmac("sha512", MONNIFY_SECRET_KEY).update(payload).digest("hex")
+    const expectedSignature = crypto.createHmac("sha512", MONNIFY_SECRET_KEY).update(payload).digest("hex")
     if(signature !== expectedSignature){
         logger.warn("Invalid Monnify webhook signature")
         return res.status(430).json({ success: false, error: "Invalid signature"})
