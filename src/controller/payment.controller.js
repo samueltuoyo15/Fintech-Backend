@@ -32,12 +32,12 @@ const verifyTransaction = async (req, res) => {
         const transaction = await Transaction.findOne({ reference })
         if(!transaction){
             logger.warn(`transaction not found for reference: ${reference}`)
-            res.status(404).json({ success: false, error: "Transaction not found"})
+            return res.status(404).json({ success: false, error: "Transaction not found"})
         }
 
         if(transaction.status === "success"){
             logger.warn(`Transaction already marked successful: ${reference}`)
-            res.status(200).json({ message: "Transaction has been proccessed ealier"})
+            return res.status(200).json({ message: "Transaction has been proccessed ealier"})
         }
 
         const account = await Account.findOne({ user: transaction.user })
@@ -121,7 +121,7 @@ const fundAccount = async (req, res) => {
       reference: paymentRef
     })
   } catch (error) {
-    logger.error("Error funding account:", error?.response?.data || error.message)
+    console.error("Error funding account:", error || error?.response?.data || error.message)
     return res.status(500).json({ success: false, error: "Internal server error" })
   }
 }
