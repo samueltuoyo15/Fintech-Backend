@@ -152,34 +152,10 @@ Once authenticated, users can fund their wallets and perform various transaction
 | **Nanoid**         | Tiny, secure, URL-friendly, unique string ID generator                       | [www.npmjs.com/package/nanoid](https://www.npmjs.com/package/nanoid) |
 | **Async-Retry**    | Retries async functions with exponential backoff                             | [www.npmjs.com/package/async-retry](https://www.npmjs.com/package/async-retry) |
 
----
-
-## 🤝 Contributing
-
-Contributions are always welcome! If you have suggestions for improvements or new features, please feel free to:
-
-*   ✨ Fork the repository.
-*   ⭐ Create a new branch (`git checkout -b feature/AmazingFeature`).
-*   📝 Make your changes and commit them (`git commit -m 'Add some AmazingFeature'`).
-*   ⬆️ Push to the branch (`git push origin feature/AmazingFeature`).
-*   ➡️ Open a pull request, detailing your changes.
-
----
-
 ## 📜 License
 
 This project is licensed under the MIT License.
 
----
-
-## 🧑‍💻 Author Info
-
-*   **Minister-Isaac**
-    *   GitHub: [github.com/Minister-Isaac](https://github.com/Minister-Isaac)
-    *   LinkedIn: [linkedin.com/in/Minister-Isaac](https://linkedin.com/in/Minister-Isaac) (Placeholder)
-    *   Twitter: [@Minister_Isaac](https://twitter.com/Minister_Isaac) (Placeholder)
-
----
 
 [![Node.js Version](https://img.shields.io/badge/Node.js-20.x-green?logo=node.js)](https://nodejs.org/)
 [![Express.js](https://img.shields.io/badge/Express.js-4.x-blue?logo=express)](https://expressjs.com/)
