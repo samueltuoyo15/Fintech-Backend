@@ -37,10 +37,19 @@ app.use("/api/v1/payment", paymentRoutes)
 app.use("/api/v1/plans", planRoutes)
 app.use(errorHandler)
 
-app.listen(process.env.PORT, async () => {
+const startServer = async () => {
+  try {
     await connectToDb()
-    logger.info(`Server is running in ${process.env.NODE_ENV} environment`)
-})
+    app.listen(process.env.PORT, () => {
+      logger.info(`Server running in ${process.env.NODE_ENV} at ${process.env.PORT}`)
+    })
+  } catch (err) {
+    logger.error("Failed to start server:", err)
+    process.exit(1)
+  }
+}
+
+startServer()
 
 process.on("unhandledRejection", (reason, promise) => {
   logger.error("unhandled Rejection at:", promise, "reason:", reason)
