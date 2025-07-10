@@ -179,36 +179,6 @@ const logoutUser = async (req, res) => {
   }
 }
 
-const refreshAccessToken = async (req, res) => {
-  const refreshToken = req.cookies.refreshToken
-  if (!refreshToken) {
-    return res.status(401).json({ success: false, message: "Refresh token missing" })
-  }
-
-  try {
-    const storedToken = await RefreshToken.findOne({ token: refreshToken }).populate("user")
-    if (!storedToken) {
-      return res.status(403).json({ success: false, message: "Invalid refresh token" })
-    }
-
-    const user = storedToken.user
-    const newAccessToken = generateAccessToken(user._id, user.username)
-
-    res.cookie("accessToken", newAccessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000
-    })
-
-    return res.status(200).json({ success: true, accessToken: newAccessToken })
-  } catch (error) {
-    logger.error("Failed to refresh access token:", error)
-    return res.status(500).json({ success: false, error: "Internal server error" })
-  }
-}
-
-
 const refreshTokenController = async (req, res) => {
   try {
     const refreshToken = req.cookies.refreshToken
