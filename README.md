@@ -256,26 +256,6 @@ The project leverages a modern JavaScript ecosystem for a powerful and scalable 
 | **Cookie-parser** | Parse Cookie header and populate `req.cookies`.         | [npmjs.com/package/cookie-parser](https://www.npmjs.com/package/cookie-parser) |
 | **Nanoid**      | Tiny, secure, URL-friendly, unique string ID generator.     | [npmjs.com/package/nanoid](https://www.npmjs.com/package/nanoid) |
 
-## 🤝 Contributing
-
-Contributions are warmly welcomed! If you have suggestions for improvements, new features, or bug fixes, please feel free to contribute.
-
-1.  🍴 **Fork the repository.**
-2.  🌿 **Create a new branch** for your feature or bug fix: `git checkout -b feature/your-feature-name`.
-3.  ✏️ **Make your changes** and ensure your code adheres to the existing style.
-4.  🧪 **Write and run tests** to ensure your changes don't break existing functionality. (If applicable)
-5.  ➕ **Commit your changes** with clear and concise messages.
-6.  ⬆️ **Push your branch** to your forked repository.
-7.  ✉️ **Open a pull request** describing your changes in detail.
-
-## ✍️ Author
-
-**Isaac**
-
-*   **GitHub**: [Minister-Isaac](https://github.com/Minister-Isaac)
-*   **LinkedIn**: [Your LinkedIn Profile](https://www.linkedin.com/in/yourusername/)
-*   **Portfolio**: [Your Portfolio Link](https://yourportfolio.com)
-
 ---
 
 [![Node.js](https://img.shields.io/badge/Node.js-v18%2B-brightgreen.svg)](https://nodejs.org/)
