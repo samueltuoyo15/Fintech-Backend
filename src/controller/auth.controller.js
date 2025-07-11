@@ -41,8 +41,7 @@ const registerUser = async (req, res) => {
     newUser.account = newAccount._id
     await newUser.save()
 
-    const emailToken = generateMailToken(newUser._id, newUser.email)
-    const verificationLink = `${process.env.FRONTEND_DOMAIN}/signin?token=${emailToken}`
+    const verificationLink = `${process.env.FRONTEND_DOMAIN}/login?token=${emailToken}`
     await sendEmailVerification(newUser.email, verificationLink)
 
     if (referral_username?.trim()) {

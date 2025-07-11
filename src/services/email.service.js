@@ -6,7 +6,7 @@ const isEmailValid = (email) => {
   return regex.test(email)
 }
 
-const sendEmailVerification = async (email) => {
+const sendEmailVerification = async (email, verificationLink) => {
   if (!email) throw new Error("Email is required")
   if (!isEmailValid(email)) throw new Error("Invalid email format")
 
@@ -32,7 +32,7 @@ const sendEmailVerification = async (email) => {
             <p>Thanks for signing up with <strong>Ife-Elroiglobal</strong>! Please verify your email to complete your account setup and start enjoying our services — buy data, airtime, pay bills and more.</p>
 
             <div style="text-align: center; margin: 30px 0;">
-            <a href="https://your-app.com/verify?token=someToken"
+            <a href="${verificationLink}"
                 style="background-color: #0d6efd; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
                 Verify My Account
             </a>
@@ -44,13 +44,15 @@ const sendEmailVerification = async (email) => {
 
             <footer style="text-align: center; font-size: 12px; color: #888;">
             &copy; ${new Date().getFullYear()} Ife-Elroiglobal. All rights reserved.<br/>
-            <a href="{process.env.FRONTEND_DOMAIN}" style="color: #0d6efd; text-decoration: none;">Visit our website</a>
+            <a href="${process.env.FRONTEND_DOMAIN}" style="color: #0d6efd; text-decoration: none;">Visit our website</a>
             </footer>
         </div>
         `
     })
   } catch (error) {
-    throw new Error("Error Sending Mail", error)
+    logger.error(error)
+    throw new Error("Error Sending Mail")
+
   }
 }
 
