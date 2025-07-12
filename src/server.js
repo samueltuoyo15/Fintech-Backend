@@ -21,25 +21,10 @@ const allowedOrigins = [
 ]
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true)
-    } else {
-      callback(new Error("Not allowed by CORS"))
-    }
-  },
+  origin: "*",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
 }))
-
-app.options("*", (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "")
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS")
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization")
-  res.setHeader("Access-Control-Allow-Credentials", "true")
-  return res.sendStatus(200)
-})
-
 
 app.use(requestLogger)
 app.use(helmet())

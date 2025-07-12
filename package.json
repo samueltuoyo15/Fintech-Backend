@@ -10,15 +10,15 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Minister-Isaac/Vtu-Backend.git"
+    "url": "git+https://github.com/samueltuoyo15/Vtu-Backend.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Minister-Isaac/Vtu-Backend/issues"
+    "url": "https://github.com/samueltuoyo15/Vtu-Backend/issues"
   },
-  "homepage": "https://github.com/Minister-Isaac/Vtu-Backend#readme",
+  "homepage": "https://github.com/samueltuoyo15/Vtu-Backend#readme",
   "description": "",
   "dependencies": {
     "argon2": "^0.43.0",
