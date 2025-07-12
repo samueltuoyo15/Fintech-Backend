@@ -7,8 +7,8 @@ const payElectirictyBills = joi.object({
     "any.required": "Disco name is reaquired"
   }),
 
-  meter_type: joi.string().valid("Prepaid", "Postpaid").required().messages({
-    "any.only": "Meter type must be one of Prepaid or Postpaid",
+  meter_type: joi.string().valid("prepaid", "postpaid").required().messages({
+    "any.only": "Meter type must be one of prepaid or postpaid",
     "string.base": "Meter type must be a string",
     "any.required": "Meter type is reaquired"
   }),

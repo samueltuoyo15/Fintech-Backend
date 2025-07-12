@@ -1,14 +1,14 @@
 import joi from "joi"
 
 const cableValidationSchema = joi.object({
-  cable_name: joi.string().valid("GOtv", "Dstv", "Startimes").required().messages({
-    "any.only": "Cable name must be one of GOtv, Dstv, or Startimes",
+  cable_name: joi.string().required().messages({
+    "any.only": "Cable name must be one of GOtv, Dstv, and ecetera..",
     "string.base": "Cable name must be a string",
     "any.required": "Cable name is reaquired"
   }),
 
-  cable_plan: joi.string().valid("Basic", "Premium").required().messages({
-    "any.only": "Cable plan type must be one of Basic or Premium",
+  cable_plan: joi.string().valid("basic", "premium").required().messages({
+    "any.only": "Cable plan type must be one of basic or premium",
     "string.base": "Cable plan type must be a string",
     "any.required": "Cable plan type is reaquired"
   }),
