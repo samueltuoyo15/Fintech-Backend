@@ -27,6 +27,22 @@ const accountSchema = new mongoose.Schema({
         type: Object,
         default: {}
     },
+    account_number: {
+        type: String,
+        default: null
+    },
+    account_name: {
+        type: String,
+        default: null
+    },
+    bank_name: {
+        type: String,
+        default: null
+    },
+    referral_link: {
+        type: String,
+        default: null
+    },
     transactions: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Transaction"

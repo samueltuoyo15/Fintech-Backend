@@ -37,7 +37,8 @@ const registerUser = async (req, res) => {
       password
     })
 
-    const newAccount = await Account.create({ user: newUser._id })
+    const referralLink = `https://ife-elroiglobal.com/signup?referral=${username}`
+    const newAccount = await Account.create({ user: newUser._id, referral_link: referralLink })
     newUser.account = newAccount._id
     await newUser.save()
 
@@ -45,14 +46,14 @@ const registerUser = async (req, res) => {
     const verificationLink = `${process.env.FRONTEND_DOMAIN}/login?token=${emailToken}`
     await sendEmailVerification(newUser.email, verificationLink)
 
-    if (referral_username?.trim()) {
+    if (referral_username?.trim() && referral_username.trim() !== username) {
       const referrer = await User.findOne({ username: referral_username.trim() })
       if (referrer) {
         const referrerAccount = await Account.findOne({ user: referrer._id })
         if (referrerAccount) {
           referrerAccount.total_referral += 1
-          referrerAccount.total_referral_bonus += 500
-          referrerAccount.wallet_balance += 500
+          referrerAccount.total_referral_bonus += 200
+          referrerAccount.wallet_balance += 200
           await referrerAccount.save()
         }
       }

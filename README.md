@@ -201,8 +201,6 @@ This will return a welcome message indicating the server is running.
 
 ### Utility Endpoints (Requires `accessToken`)
 
-*   **Get User Details:**
-    `GET /api/v1/subscribe/user-details`
 
 *   **Get Data Plans:**
     `GET /api/v1/plans/data-plans`

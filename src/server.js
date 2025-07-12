@@ -3,6 +3,7 @@ import helmet from "helmet"
 import logger from "./utils/logger.js"
 import cors from "cors"
 import cookieParser from "cookie-parser"
+import { createBasicRateLimiter } from "./middleware/rate.limit.js"
 import errorHandler from "./middleware/error.handler.js"
 import { requestLogger } from "./middleware/request.logger.js"
 import { connectToDb } from "./config/db.config.js"
@@ -33,6 +34,8 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }))
 
+app.use(createBasicRateLimiter(100, 15 * 60 * 1000))
+app.set("trust proxy", 1)
 app.use(requestLogger)
 app.use(helmet())
 app.use(express.json())
