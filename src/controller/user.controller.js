@@ -6,7 +6,7 @@ const getUserDetails = async (req, res) => {
         return res.status(400).json({ success: false, message: "User ID is required" })
     }
     try {
-        const user = await User.findById(userId).populate("account").populate("transactions")
+        const user = await User.findById(userId).populate("account")
         if (!user) {
             return res.status(404).json({ message: "User not found" })
         }
