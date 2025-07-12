@@ -13,9 +13,7 @@ const buyDataSubcription = async (req, res) => {
   if (!network || !phone || !plan || typeof ported_number === "undefined") {
     return res.status(400).json({ error: "Network, phone, plan, and ported_number are required" })
   }
-    if(amount < 100){
-    return res.status(400).json({ error: "Amount to be funded must be greater than 100NGN"})
-  }
+
   try {
     const account = await Account.findOne({ user: userId })
     if (!account) return res.status(404).json({ error: "Account not found" })
