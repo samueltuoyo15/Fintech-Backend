@@ -92,7 +92,7 @@ const fundAccount = async (req, res) => {
       paymentDescription: "Wallet Funding",
       currencyCode: "NGN",
       contractCode: process.env.MONNIFY_CONTRACT_CODE,
-      redirectUrl: process.env.FRONTEND_DOMAIN
+      redirectUrl: `${process.env.FRONTEND_DOMAIN}/dashboard`
     })
 
     const transaction = await Transaction.create({
