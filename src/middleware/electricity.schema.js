@@ -1,8 +1,8 @@
 import joi from "joi"
 
 const payElectirictyBills = joi.object({
-  disco_name: joi.string().valid("Ikeja Disco", "Eko Disco", "Abuja Disco").required().messages({
-    "any.only": "Disco name must be one of Ikeja Disco, Eko Disco, or Abuja Disco",
+  disco_name: joi.string().required().messages({
+    "any.only": "Disco name must be one of Ikeja Disco, Eko Disco, etcetera",
     "string.base": "Disco name must be a string",
     "any.required": "Disco name is reaquired"
   }),
@@ -19,7 +19,7 @@ const payElectirictyBills = joi.object({
   }),
 
   amount: joi.number().required().messages({
-    "number.base": "Amount must be a number (e.g., 08043343.....)",
+    "number.base": "Amount must be a number (e.g., 100)",
     "any.required": "Amount is required"
   })
 })
