@@ -5,7 +5,6 @@ import validateDataReqBody from "../middleware/data.schema.js"
 import validateAirtimeReqBody from "../middleware/airtime.schema.js"
 import validateElectricityReqBody from "../middleware/electricity.schema.js"
 import validateCableReqBody from "../middleware/cable.schema.js"
-import { getUserDetails } from "../controller/user.controller.js"
 
 const router = Router()
 
