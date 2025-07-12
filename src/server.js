@@ -14,13 +14,20 @@ import dotenv from "dotenv"
 dotenv.config()
 
 const app = express()
-app.use(requestLogger)
 
 app.use(cors({
   origin: "http://localhost:3000",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
 }))
+
+app.options("*", cors({
+  origin: "http://localhost:3000",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+}))
+
+app.use(requestLogger)
 app.use(helmet())
 app.use(express.json())
 app.use(cookieParser())
