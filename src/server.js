@@ -15,17 +15,31 @@ dotenv.config()
 
 const app = express()
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://ife-global-jkv6.vercel.app" 
+]
+
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error("Not allowed by CORS"))
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
 }))
 
-app.options("*", cors({
-  origin: "http://localhost:3000",
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
-}))
+app.options("*", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "")
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS")
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization")
+  res.setHeader("Access-Control-Allow-Credentials", "true")
+  return res.sendStatus(200)
+})
+
 
 app.use(requestLogger)
 app.use(helmet())
