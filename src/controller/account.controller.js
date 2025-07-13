@@ -70,6 +70,7 @@ const buyDataSubcription = async (req, res) => {
       return res.status(response.status).json({ error: error || "Failed to subscribe to data" })
     }
   } catch (error) {
+    console.error("error buying data:", error)
     return res.status(500).json({ success: false, error: "Internal server error" })
   }
 }
@@ -157,6 +158,7 @@ const buyAirtimeSubscription = async (req, res) => {
       return res.status(response.status).json({ error: "Failed to subscribe to airtime" })
     }
   } catch (error) {
+    console.error("error buying airtime:", error)
     return res.status(500).json({ success: false, error: error || "Internal server error" })
   }
 }
