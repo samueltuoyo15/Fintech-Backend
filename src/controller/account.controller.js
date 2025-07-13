@@ -2,14 +2,16 @@ import logger from "../utils/logger.js"
 import Account from "../models/account.model.js"
 import Transaction from "../models/transaction.model.js"
 import { dataPlans } from "../utils/plans.js"
+import { nanoid } from "nanoid"
 import axios from "axios"
 import dotenv from "dotenv"
 dotenv.config()
-
 const buyDataSubcription = async (req, res) => {
   logger.info("Received request for data subscription")
+
   const { network, phone, plan, ported_number } = req.body
   const userId = req.user._id
+
   if (!network || !phone || !plan || typeof ported_number === "undefined") {
     return res.status(400).json({ error: "Network, phone, plan, and ported_number are required" })
   }
@@ -18,58 +20,84 @@ const buyDataSubcription = async (req, res) => {
     const account = await Account.findOne({ user: userId })
     if (!account) return res.status(404).json({ error: "Account not found" })
 
-    const selectedPlan = dataPlans.find((p) => p.id === Number(plan))
+    const selectedPlan = dataPlans.find(p => p.id === Number(plan))
     logger.info("selected plan", selectedPlan)
+
     if (!selectedPlan) {
-      return res.status(400).json({ error: "Data plan is not available." })
+      return res.status(400).json({ error: "Data plan is not available" })
     }
 
     if (account.wallet_balance < selectedPlan.amount) {
-      return res.status(400).json({ error: "Insufficient wallet balance." })
+      return res.status(400).json({ error: "Insufficient wallet balance" })
     }
 
-    const response = await axios.post(`${process.env.EXTERNAL_BACKEND_DOMAIN}/data`, {
-      network,
-      mobile_number: phone,
-      plan,
-      ported_number
-    }, {
-      headers: {
-        Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
+    let response
+
+    try {
+      response = await axios.post(`${process.env.EXTERNAL_BACKEND_DOMAIN}/data`, {
+        network,
+        mobile_number: phone,
+        plan,
+        ported_number
+      }, {
+        headers: {
+          Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
+        },
+        timeout: 10000
+      })
+    } catch (apiError) {
+      const status = apiError.response?.status || 500
+      const message = apiError.response?.data?.error || "Failed to connect to data provider"
+      logger.error("Data API error", apiError.response?.data || apiError.message)
+      return res.status(status).json({ error: message })
+    }
+
+    const data = response.data
+
+    const rawAmount = data.plan_amount ?? selectedPlan.amount
+    const amount = parseFloat(rawAmount)
+
+    if (isNaN(amount)) {
+      return res.status(500).json({ error: "Invalid amount received from data API" })
+    }
+
+    account.wallet_balance -= amount
+    account.total_funding += amount
+
+    const paymentRef = "REF_" + nanoid()
+
+    const transaction = await Transaction.create({
+      user: userId,
+      type: "data",
+      amount,
+      status: "success",
+      reference: paymentRef,
+      metadata: {
+        status: "successful",
+        plan: plan,
+        network: data.network,
+        plan_amount: amount,
+        plan_name: data.plan_name,
+        date: data.create_date,
+        ported_number: !!ported_number
       }
     })
 
-      account.wallet_balance -= response.data.plan_amount
-      account.total_funding += response.data.plan_amount
-      const paymentRef = "REF_" + nanoid()
+    account.transactions.push(transaction._id)
+    await account.save()
 
-      const transaction = await Transaction.create({
-        user: userId,
-        type: "data",
-        amount: response.data.plan_amount || 0,
-        status: "success",
-        reference: paymentRef,
-        metadata: {
-          status: "successful",
-          plan: plan,
-          network: response.data.network,
-          plan_amount: response.data.plan_amount,
-          plan_name: response.data.plan_name,
-          date: response.data.create_date,
-          ported_number: !!ported_number
-        }
-      })
+    logger.info("Data subscription successful", data)
 
-      account.transactions.push(transaction._id)
-      await account.save()
-
-      logger.info("Data subscription successful:", response.data)
-      return res.status(201).json({ success: true, message: `You succesfully purchased data of plan of ${response.data.plan_name}.` })
-  } catch (error) {
-    console.error("error buying data:", error)
+    return res.status(201).json({
+      success: true,
+      message: `You successfully purchased data of plan ${data.plan_name}`
+    })
+  } catch (err) {
+    console.error("error buying data:", err)
     return res.status(500).json({ success: false, error: "Internal server error" })
   }
 }
+
 
 const getAllDataTransactions = async (req, res) => {
   const { userId } = req.params

@@ -25,7 +25,7 @@ const verifyTransaction = async (req, res) => {
 
     try {
         const reference = eventData.paymentReference
-        const amountPaid = parseFloat(eventData.amountPaid)
+        const amountPaid = parseFloat(eventData.amount)
         const transaction = await Transaction.findOne({ reference })
         if(!transaction){
             logger.warn(`transaction not found for reference: ${reference}`)
