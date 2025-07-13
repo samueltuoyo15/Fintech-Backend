@@ -67,7 +67,7 @@ const buyDataSubcription = async (req, res) => {
       logger.info("Data subscription successful:", response.data)
       return res.status(200).json({ success: true, message: `You succesfully purchased data of plan of ${response.data.plan_name}.` })
     } else {
-      return res.status(response.status).json({"Failed to subscribe to data" })
+      return res.status(response.status).json({ error: "Failed to subscribe to data" })
     }
   } catch (error) {
     console.error("error buying data:", error)
@@ -155,7 +155,7 @@ const buyAirtimeSubscription = async (req, res) => {
 
       return res.status(200).json(response.data)
     } else {
-      return res.status(response.status).json({ "Failed to subscribe to airtime" })
+      return res.status(response.status).json({ error: "Failed to subscribe to airtime" })
     }
   } catch (error) {
     console.error("error buying airtime:", error)
