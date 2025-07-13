@@ -39,7 +39,6 @@ const buyDataSubcription = async (req, res) => {
       }
     })
 
-    if (response.status === 201) {
       account.wallet_balance -= response.data.plan_amount
       account.total_funding += response.data.plan_amount
       const paymentRef = "REF_" + nanoid()
@@ -65,10 +64,7 @@ const buyDataSubcription = async (req, res) => {
       await account.save()
 
       logger.info("Data subscription successful:", response.data)
-      return res.status(200).json({ success: true, message: `You succesfully purchased data of plan of ${response.data.plan_name}.` })
-    } else {
-      return res.status(response.status).json({ error: "Failed to subscribe to data" })
-    }
+      return res.status(201).json({ success: true, message: `You succesfully purchased data of plan of ${response.data.plan_name}.` })
   } catch (error) {
     console.error("error buying data:", error)
     return res.status(500).json({ success: false, error: "Internal server error" })
