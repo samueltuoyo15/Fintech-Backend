@@ -4,6 +4,7 @@ import Transaction from "../models/transaction.model.js"
 import { initializeTransaction } from "../services/monnify.service.js"
 import { nanoid } from "nanoid"
 import logger from "../utils/logger.js"
+import { transactionQueue } from "../workers/transaction.worker.js"
 import dotenv from "dotenv"
 dotenv.config()
 
@@ -25,7 +26,7 @@ const verifyTransaction = async (req, res) => {
 
     try {
         const reference = eventData.paymentReference
-        const amountPaid = parseFloat(eventData.amount)
+        const amountPaid = eventData.amountPaid
         const transaction = await Transaction.findOne({ reference })
         if(!transaction){
             logger.warn(`transaction not found for reference: ${reference}`)
@@ -35,27 +36,15 @@ const verifyTransaction = async (req, res) => {
         if(transaction.status === "success"){
             logger.warn(`Transaction already marked successful: ${reference}`)
             return res.status(200).json({ message: "Transaction has been proccessed ealier"})
-        }
-        const account = await Account.findOne({ user: transaction.user })
-        if(!account){
-             logger.warn("Account does not exist")
-             return res.status(404).json({ success: false, error: "Account not found" })
-        }
+        }  
 
-        account.wallet_balance += amountPaid
-        account.total_funding += amountPaid
-        await account.save()
-
-        transaction.status = "success"
-        transaction.metadata = {
-            ...transaction.metadata,
-            monnifyPaymentDetails: eventData,
-            dateVerified: new Date().toISOString()
-        }
-        await transaction.save()
-
-        logger.info(`Transaction verified and updated: ${reference}`)
-        return res.status(200).json({ success: true, message: `Transaction verified and wallet funded with ${amountPaid}`})
+        await transactionQueue.add("process-wallet-funding", {
+          reference: eventData.paymentReference,
+          amountPaid: eventData.amountPaid,
+          eventData
+        }, { jobId: reference })
+        logger.info(`Transaction verified successfully: ${reference}`)
+        return res.status(200).json({ success: true, message: `Transaction verified successfully`})
     } catch (error) {
       logger.error("Error processing Monnify webhook:", error)
       return res.status(500).json({ success: false, error: "Internal server error" })

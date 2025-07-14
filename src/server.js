@@ -2,6 +2,7 @@ import express from "express"
 import helmet from "helmet"
 import logger from "./utils/logger.js"
 import cors from "cors"
+import "./workers/transaction.worker.js"
 import cookieParser from "cookie-parser"
 import { createBasicRateLimiter } from "./middleware/rate.limit.js"
 import errorHandler from "./middleware/error.handler.js"
@@ -68,6 +69,7 @@ const startServer = async () => {
 startServer()
 
 process.on("unhandledRejection", (reason, promise) => {
+  disconnectRedis()
   logger.error("unhandled Rejection at:", promise, "reason:", reason)
   process.exit(1)
 })
