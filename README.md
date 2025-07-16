@@ -201,6 +201,17 @@ This will return a welcome message indicating the server is running.
 
 ### Utility Endpoints (Requires `accessToken`)
 
+*   **Query All Transaction  for the user**: `GET /api/v1/subscribe/transactions`.
+
+*   **Query Data Transaction**: `GET /api/v1/subscribe/query-data/:transactionId`.
+
+*   **Query Airtime Transaction**: `GET /api/v1/subscribe/query-airtime/:transactionId`.
+
+*   **Query Electricity Bill**: `GET /api/v1/subscribe/query-electricity-bill`.
+
+*   **Validate UIC (Cable TV)**: `GET /api/v1/subscribe/validate-uic?smart_card_number={num}&cable_name={name}`.
+
+*   **Validate Meter (Electricity)**: `GET /api/v1/subscribe/validate-meter?meternumber={num}&disconame={name}&metertype={type}`.
 
 *   **Get Data Plans:**
     `GET /api/v1/plans/data-plans`

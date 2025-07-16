@@ -6,6 +6,19 @@ import { nanoid } from "nanoid"
 import axios from "axios"
 import dotenv from "dotenv"
 dotenv.config()
+
+const getAllTransactions = async (req, res) => {
+  const { userId } = req.params
+  try {
+    const account = await Account.findOne({ user: userId }).populate("transactions")
+    if (!account) return res.status(404).json({ error: "Account not found" })
+    return res.status(200).json({ suceess: true, transactions: account })
+  } catch (error) {
+    return res.status(500).json({ success: false, error: "Internal server error" })
+  }
+}
+
+
 const buyDataSubcription = async (req, res) => {
   logger.info("Received request for data subscription")
 
@@ -365,6 +378,7 @@ const validateMeter = async (req, res) => {
 }
 
 export {
+  getAllTransactions,
   buyDataSubcription,
   getAllDataTransactions,
   queryDataTransaction,
