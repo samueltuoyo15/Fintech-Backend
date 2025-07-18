@@ -11,7 +11,13 @@ const getUserDetails = async (req, res) => {
         if(cachedUser){
             return res.status(200).json({ success: true, message: "User details retrieved succesfully", source: "redis-cache", user: JSON.parse(cachedUser)})
         }
-        const user = await User.findById(userId).populate({ path: "account" populate: { path: "transactions"}})
+        
+        const user = await User.findById(userId).populate({
+            path: "account",
+            populate: {
+                path: "transactions"
+            }
+        })
 
         if (!user) {
             return res.status(404).json({ message: "User not found" })
