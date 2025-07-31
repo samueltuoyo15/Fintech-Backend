@@ -377,6 +377,32 @@ const validateMeter = async (req, res) => {
   }
 }
 
+const purchaseAirtime2Cash = async (req, res) => {
+  logger.info("Airtme to cash endpoint hit")
+
+  const { network, phone_number, amount, } = req.body
+  const userId = req.user._id
+  if(!network || !phone_number || !amount){
+    return res.status(400).json({ success: false, error: "Incomplete Request Body"})
+  }
+  try {
+
+    const account = await Account.findOne({ user: userId })
+
+    if (!account) return res.status(404).json({ error: "Account not found" })
+
+    if (account.wallet_balance < amount) {
+      return res.status(400).json({ error: "Insufficient wallet balance." })
+    }
+
+    // const response = await axios.get(`https://vtuafrica.com.ng/portal/api-test/airtime-cash/?apikey=${VTUAFRICA_API_KEY}&network=${network}&sender=test@gmail.com&sendernumber=${phone_number}&amount=${amount}&sitephone=${process.env.VTUAFRICA_AIRTME2_CASH_PHONE_NUMBER}&ref=${"REF_" + nanoid()}&webhookURL=http://testlink.com/webhook/`)
+    // console.log(response.data)
+    return res.status(200).json({ success: false, message: "Airtime to Cash was successful!"})
+  } catch(error){
+    logger.error("Failed to purchase airtime to cash service")
+    return res.status(500).json({ success: false, error: "Failed to purchase airtme to cash service"})
+  }
+}
 export {
   getAllTransactions,
   buyDataSubcription,
@@ -389,5 +415,6 @@ export {
   buyCableSubscription,
   queryCableSubscription,
   validateUIC,
-  validateMeter
+  validateMeter,
+  purchaseAirtime2Cash,
 }
