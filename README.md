@@ -1,4 +1,4 @@
-# VTU Backend API: Secure & Scalable Fintech Services 
+# VTU Backend API: Secure & Scalable Fintech Services 💰
 
 ## Overview
 This project is a robust Node.js backend API built with Express.js, designed to power Virtual Top-Up (VTU) and bill payment services. It integrates with external payment gateways, manages user accounts, and handles transactions efficiently and securely using MongoDB and Redis for data persistence and caching.
