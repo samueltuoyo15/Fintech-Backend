@@ -1,5 +1,5 @@
 import User from "../models/user.model.js"
-import { redis } from "../config/redis.config.js"
+import { redis } from "../common/config/redis.config.js"
 
 const getUserDetails = async (req, res) => {
     const userId = req?.user._id

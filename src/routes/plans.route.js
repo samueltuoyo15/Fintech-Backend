@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { dataPlans, networkList, cableList, cablePlanList, discoList } from "../utils/plans.js"
+import { dataPlans, networkList, cableList, cablePlanList, discoList } from "../common/utils/plans.js"
 
 const router = Router()
 

@@ -2,7 +2,7 @@ import { Queue, Worker } from "bullmq"
 import { redis } from "../config/redis.config.js"
 import Account from "../models/account.model.js"
 import Transaction from "../models/transaction.model.js"
-import logger from "../utils/logger.js"
+import logger from "../common/utils/logger.js"
 
 export const transactionQueue = new Queue("transactionQueue", {
     connection: redis,

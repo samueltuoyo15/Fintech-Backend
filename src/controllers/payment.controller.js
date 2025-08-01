@@ -3,8 +3,8 @@ import Account from "../models/account.model.js"
 import Transaction from "../models/transaction.model.js"
 import { initializeTransaction } from "../services/monnify.service.js"
 import { nanoid } from "nanoid"
-import logger from "../utils/logger.js"
-import { transactionQueue } from "../workers/transaction.worker.js"
+import logger from "../common/utils/logger.js"
+import { transactionQueue } from "../queues/transaction.worker.js"
 import dotenv from "dotenv"
 dotenv.config()
 

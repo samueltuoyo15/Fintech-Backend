@@ -1,7 +1,7 @@
-import logger from "../utils/logger.js"
+import logger from "../common/utils/logger.js"
 import Account from "../models/account.model.js"
 import Transaction from "../models/transaction.model.js"
-import { dataPlans } from "../utils/plans.js"
+import { dataPlans } from "../common/utils/plans.js"
 import { nanoid } from "nanoid"
 import axios from "axios"
 import dotenv from "dotenv"
@@ -387,7 +387,7 @@ const purchaseAirtime2Cash = async (req, res) => {
   }
   try {
 
-    const account = await Account.findOne({ user: userId })
+    const account = await Account.findOne({ user: userId }).populate("user")
 
     if (!account) return res.status(404).json({ error: "Account not found" })
 
@@ -395,14 +395,16 @@ const purchaseAirtime2Cash = async (req, res) => {
       return res.status(400).json({ error: "Insufficient wallet balance." })
     }
 
-    // const response = await axios.get(`https://vtuafrica.com.ng/portal/api-test/airtime-cash/?apikey=${VTUAFRICA_API_KEY}&network=${network}&sender=test@gmail.com&sendernumber=${phone_number}&amount=${amount}&sitephone=${process.env.VTUAFRICA_AIRTME2_CASH_PHONE_NUMBER}&ref=${"REF_" + nanoid()}&webhookURL=http://testlink.com/webhook/`)
+    // const response = await axios.get(`https://vtuafrica.com.ng/portal/api-test/airtime-cash/?apikey=${VTUAFRICA_API_KEY}&network=${network}&sender=${account.user.email}&sendernumber=${phone_number}&amount=${amount}&sitephone=${process.env.VTUAFRICA_AIRTME2_CASH_PHONE_NUMBER}&ref=${"REF_" + nanoid()}&webhookURL=http://testlink.com/webhook/`)
     // console.log(response.data)
-    return res.status(200).json({ success: false, message: "Airtime to Cash was successful!"})
+    return res.status(200).json({ success: true, message: "Airtime to Cash was successful!"})
   } catch(error){
     logger.error("Failed to purchase airtime to cash service")
     return res.status(500).json({ success: false, error: "Failed to purchase airtme to cash service"})
   }
 }
+
+
 export {
   getAllTransactions,
   buyDataSubcription,

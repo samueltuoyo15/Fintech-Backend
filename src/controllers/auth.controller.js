@@ -1,9 +1,9 @@
-import logger from "../utils/logger.js"
+import logger from "../common/utils/logger.js"
 import User from "../models/user.model.js"
 import Account from "../models/account.model.js"
 import RefreshToken from "../models/refresh.token.model.js"
 import sendEmailVerification from "../services/email.service.js"
-import { generateAccessToken, generateRefreshToken, generateMailToken } from "../utils/generate.token.js"
+import { generateAccessToken, generateRefreshToken, generateMailToken } from "../common/utils/generate.token.js"
 import jwt from "jsonwebtoken"
 
 const registerUser = async (req, res) => {

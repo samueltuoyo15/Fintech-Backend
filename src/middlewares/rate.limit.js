@@ -1,7 +1,7 @@
 import { rateLimit } from "express-rate-limit"
 import RedisStore from "rate-limit-redis"
-import { redis } from "../config/redis.config.js"
-import logger from "../utils/logger.js"
+import { redis } from "../common/config/redis.config.js"
+import logger from "../common/utils/logger.js"
 
 export const createBasicRateLimiter = (maxRequests, time) => {
   return rateLimit({

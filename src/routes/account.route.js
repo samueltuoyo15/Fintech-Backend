@@ -1,12 +1,12 @@
 import { Router } from "express"
-import { getAllTransactions, buyDataSubcription, buyAirtimeSubscription, getAllDataTransactions, queryDataTransaction, queryAirtimeTransaction, payElectricityBills, queryElectricityBill, buyCableSubscription, queryCableSubscription, validateUIC, validateMeter, purchaseAirtime2Cash } from "../controller/account.controller.js"
-import { authenticateUser } from "../middleware/auth.middleware.js"
-import validateDataReqBody from "../middleware/data.schema.js"
-import validateAirtimeReqBody from "../middleware/airtime.schema.js"
-import validateElectricityReqBody from "../middleware/electricity.schema.js"
-import validateAirtime2CashReqBody from "../middleware/airtime2cash.schema.js"
-import validateCableReqBody from "../middleware/cable.schema.js"
-import { createBasicRateLimiter } from "../middleware/rate.limit.js"
+import { getAllTransactions, buyDataSubcription, buyAirtimeSubscription, getAllDataTransactions, queryDataTransaction, queryAirtimeTransaction, payElectricityBills, queryElectricityBill, buyCableSubscription, queryCableSubscription, validateUIC, validateMeter, purchaseAirtime2Cash } from "../controllers/account.controller.js"
+import { authenticateUser } from "../middlewares/auth.middleware.js"
+import validateDataReqBody from "../middlewares/data.schema.js"
+import validateAirtimeReqBody from "../middlewares/airtime.schema.js"
+import validateElectricityReqBody from "../middlewares/electricity.schema.js"
+import validateAirtime2CashReqBody from "../middlewares/airtime2cash.schema.js"
+import validateCableReqBody from "../middlewares/cable.schema.js"
+import { createBasicRateLimiter } from "../middlewares/rate.limit.js"
 
 const router = Router()
 router.get("/transactions", authenticateUser, getAllTransactions)

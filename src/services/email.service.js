@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer"
-import logger from "../utils/logger.js"
+import logger from "../common/utils/logger.js"
 
 const isEmailValid = (email) => {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
