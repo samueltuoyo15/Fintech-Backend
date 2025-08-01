@@ -5,15 +5,17 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest"
   },
   "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/samueltuoyo15/Vtu-Backend.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "Fintech Application"
+  ],
+  "author": "Samuel Tuoyo",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/samueltuoyo15/Vtu-Backend/issues"
@@ -41,6 +43,7 @@
     "rate-limit-redis": "^4.2.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "vitest": "^3.2.4"
   }
 }
