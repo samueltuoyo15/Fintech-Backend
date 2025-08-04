@@ -1,5 +1,5 @@
 import { Queue, Worker } from "bullmq"
-import { redis } from "../config/redis.config.js"
+import { redis } from "../common/config/redis.config.js"
 import Account from "../models/account.model.js"
 import Transaction from "../models/transaction.model.js"
 import logger from "../common/utils/logger.js"
