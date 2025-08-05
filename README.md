@@ -307,6 +307,30 @@ Authorization: Bearer <accessToken>
 - 404 Not Found: Account not found for the user.
 - 500 Internal Server Error: General server error.
 
+
+#### POST /api/v1/subscribe/bulk-sms
+Bulk sms service.
+**Request**: (Requires Authentication)
+```json
+{
+  "message": "Your message here",        
+  "phone_numbers": ["08012345678", "08012345678"]
+}
+```
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Message sent successfully to all the provided numbers",
+  "charge" totalCharges,  
+}
+```
+**Errors**:
+- 400 Bad Request: phone_numbers and message are missing/invalid, or insufficient wallet balance.
+- 404 Not Found: Account not found.
+- 500 Internal Server Error: Failed to connect to bulk sms provider or general server error.
+
+
 #### POST /api/v1/subscribe/data
 Purchases a data subscription for a specified mobile number.
 **Request**: (Requires Authentication)

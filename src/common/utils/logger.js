@@ -5,8 +5,10 @@ const logger = pino({
     ...process.env.NODE_ENV !== "production" && {
         transport: {
             target: "pino-pretty",
-            optinos: {
-                colorize: true
+            options: {
+                colorize: true,
+                
+                singleLine: false,
             }
         }
     }
