@@ -10,7 +10,7 @@ dotenv.config()
 const getAllTransactions = async (req, res) => {
   const { userId } = req.params
   try {
-    const account = await Account.findOne({ user: userId }).populate("transactions").lean()
+    const account = await Account.findOne({ user: userId }).populate("transactions")
     if (!account) return res.status(404).json({ error: "Account not found" })
     return res.status(200).json({ suceess: true, transactions: account })
   } catch (error) {
@@ -115,7 +115,7 @@ const buyDataSubcription = async (req, res) => {
 const getAllDataTransactions = async (req, res) => {
   const { userId } = req.params
   try {
-    const account = await Account.findOne({ user: userId }).populate("transactions").lean()
+    const account = await Account.findOne({ user: userId }).populate("transactions")
     if (!account) return res.status(404).json({ error: "Account not found" })
 
     const dataTransactions = account.transactions.filter(t => t.type === "data")
@@ -128,7 +128,7 @@ const getAllDataTransactions = async (req, res) => {
 const queryDataTransaction = async (req, res) => {
   const { userId, transactionId } = req.params
   try {
-    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "data" }).lean()
+    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "data" })
     if (!transaction) return res.status(404).json({ error: "Data transaction not found" })
     return res.status(200).json(transaction)
   } catch (error) {
@@ -203,7 +203,7 @@ const buyAirtimeSubscription = async (req, res) => {
 const queryAirtimeTransaction = async (req, res) => {
   const { userId, transactionId } = req.params
   try {
-    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "airtime" }).lean()
+    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "airtime" })
     if (!transaction) return res.status(404).json({ error: "Airtime transaction not found" })
     return res.status(200).json(transaction)
   } catch (error) {
@@ -268,7 +268,7 @@ const payElectricityBills = async (req, res) => {
 const queryElectricityBill = async (req, res) => {
   const { userId, transactionId } = req.params
   try {
-    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "electricity" }).lean()
+    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "electricity" })
     if (!transaction) return res.status(404).json({ error: "Electricity transaction not found" })
     return res.status(200).json(transaction)
   } catch (error) {
@@ -333,7 +333,7 @@ const buyCableSubscription = async (req, res) => {
 const queryCableSubscription = async (req, res) => {
   const { userId, transactionId } = req.params
   try {
-    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "cable" }).lean()
+    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "cable" })
     if (!transaction) return res.status(404).json({ error: "Cable transaction not found" })
     return res.status(200).json(transaction)
   } catch (error) {

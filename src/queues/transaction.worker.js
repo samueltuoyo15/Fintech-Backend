@@ -11,10 +11,10 @@ export const transactionQueue = new Queue("transactionQueue", {
 const worker = new Worker("transactionQueue", async (job) => {
     try{
         const { reference, amountPaid, eventData } = job.data
-        const transaction = await Transaction.findOne({ reference }).lean()
+        const transaction = await Transaction.findOne({ reference })
         if(!transaction || transaction.status === "success") return 
 
-        const account = await Account.findOne({ user: transaction.user }).lean()
+        const account = await Account.findOne({ user: transaction.user })
         if(!account) return 
 
         account.wallet_balance += amountPaid
@@ -41,5 +41,5 @@ worker.on("completed", (job) => {
 })
 
 worker.on("failed", (job, error) => {
-    logger.error(`Job completed: ${job.id}`, error)
+    logger.error(`Job failed: ${job.id}`, error)
 })

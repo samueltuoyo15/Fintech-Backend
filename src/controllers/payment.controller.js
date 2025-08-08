@@ -8,7 +8,7 @@ import { transactionQueue } from "../queues/transaction.worker.js"
 import dotenv from "dotenv"
 dotenv.config()
 
-const MONNIFY_SECRET_KEY=process.env.MONNIFY_SECRET_KEY
+const MONNIFY_SECRET_KEY = process.env.MONNIFY_SECRET_KEY
 const verifyTransaction = async (req, res) => {
     const signature = req.headers["monnify-signature"]
     const payload = JSON.stringify(req.body)
@@ -27,7 +27,7 @@ const verifyTransaction = async (req, res) => {
     try {
         const reference = eventData.paymentReference
         const amountPaid = eventData.amountPaid
-        const transaction = await Transaction.findOne({ reference })
+        const transaction = await Transaction.findOne({ reference }).lean()
         if(!transaction){
             logger.warn(`transaction not found for reference: ${reference}`)
             return res.status(404).json({ success: false, error: "Transaction not found"})
@@ -39,8 +39,8 @@ const verifyTransaction = async (req, res) => {
         }  
 
         await transactionQueue.add("process-wallet-funding", {
-          reference: eventData.paymentReference,
-          amountPaid: eventData.amountPaid,
+          reference: reference,
+          amountPaid: amountPaid,
           eventData
         }, { jobId: reference })
         logger.info(`Transaction verified successfully: ${reference}`)
