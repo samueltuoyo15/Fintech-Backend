@@ -903,8 +903,7 @@ This project is licensed under the ISC License. See the [LICENSE](https://openso
 Connect with the project author:
 
 -   **Samuel Tuoyo**:
-    -   LinkedIn: [https://www.linkedin.com/in/samueltuoyo/](https://www.linkedin.com/in/samueltuoyo/)
-    -   Portfolio: [https://samueltuoyo.vercel.app/](https://samueltuoyo.vercel.app/)
+    -   LinkedIn: [https://www.linkedin.com/in/tuoyo-samuel-8568b62b6/](https://www.linkedin.com/in/tuoyo-samuel-8568b62b6/)
 
 ---
 

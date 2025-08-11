@@ -52,8 +52,8 @@ const registerUser = async (req, res) => {
         const referrerAccount = await Account.findOne({ user: referrer._id })
         if (referrerAccount) {
           referrerAccount.total_referral += 1
-          referrerAccount.total_referral_bonus += 200
-          referrerAccount.wallet_balance += 200
+          referrerAccount.total_referral_bonus += 1
+          referrerAccount.wallet_balance += 1
           await referrerAccount.save()
         }
       }
