@@ -1,32 +1,32 @@
 import crypto from "crypto"
 import Account from "../models/account.model.js"
 import Transaction from "../models/transaction.model.js"
-import { initializeTransaction } from "../services/monnify.service.js"
+import initializeTransaction from "../services/paystack.service.js"
 import { nanoid } from "nanoid"
 import logger from "../common/utils/logger.js"
 import { transactionQueue } from "../queues/transaction.worker.js"
+import { paystackConfig } from "../services/paystack.auth.js"
 import dotenv from "dotenv"
 dotenv.config()
 
-const MONNIFY_SECRET_KEY = process.env.MONNIFY_SECRET_KEY
-const verifyTransaction = async (req, res) => {
-    const signature = req.headers["monnify-signature"]
+const verifyTransactionWithWebhook = async (req, res) => {
+    const signature = req.headers["x-paystack-signature"]
     const payload = JSON.stringify(req.body)
 
-    const expectedSignature = crypto.createHmac("sha512", MONNIFY_SECRET_KEY).update(payload).digest("hex")
+    const expectedSignature = crypto.createHmac("sha512", paystackConfig.secretKey).update(payload).digest("hex")
     if(signature !== expectedSignature){
-        logger.warn("Invalid Monnify webhook signature")
+        logger.warn("Invalid Paystack webhook signature")
         return res.status(430).json({ success: false, error: "Invalid signature"})
     }
 
-    const { eventType, eventData } = req.body
-    if(eventType !== "SUCCESSFUL_TRANSACTION"){
-        return res.status(200).json({ message: "Webhook acknowledged: Skipped processing" })
+    const { event, data } = req.body
+    if(event !== "charge.success"){
+        return res.status(200).json({ message: "Paystack Webhook acknowledged: Skipped processing" })
     }
 
     try {
-        const reference = eventData.paymentReference
-        const amountPaid = eventData.amountPaid
+        const reference = data.paymentReference
+        const amountPaid = data.amountPaid / 100
         const transaction = await Transaction.findOne({ reference }).lean()
         if(!transaction){
             logger.warn(`transaction not found for reference: ${reference}`)
@@ -41,8 +41,9 @@ const verifyTransaction = async (req, res) => {
         await transactionQueue.add("process-wallet-funding", {
           reference: reference,
           amountPaid: amountPaid,
-          eventData
+          eventData: data
         }, { jobId: reference })
+
         logger.info(`Transaction verified successfully: ${reference}`)
         return res.status(200).json({ success: true, message: `Transaction verified successfully`})
     } catch (error) {
@@ -79,8 +80,6 @@ const fundAccount = async (req, res) => {
       customerEmail: email,
       paymentReference: paymentRef,
       paymentDescription: "Wallet Funding",
-      currencyCode: "NGN",
-      contractCode: process.env.MONNIFY_CONTRACT_CODE,
       redirectUrl: `${process.env.FRONTEND_DOMAIN}/dashboard`
     })
 
@@ -102,7 +101,7 @@ const fundAccount = async (req, res) => {
     logger.info("Initialized transaction successfully")
     return res.status(200).json({
       message: "Transaction initialized. Please complete payment.",
-      checkoutUrl: response.responseBody.checkoutUrl,
+      checkoutUrl: response.data.authorization_url,
       reference: paymentRef
     })
   } catch (error) {
@@ -112,4 +111,4 @@ const fundAccount = async (req, res) => {
 }
 
 
-export { fundAccount, verifyTransaction }
+export { fundAccount, verifyTransactionWithWebhook }

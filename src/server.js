@@ -35,6 +35,7 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }))
 
+app.set("trust proxy", true)
 app.use(createBasicRateLimiter(100, 15 * 60 * 1000))
 app.use(requestLogger)
 app.use(helmet())
