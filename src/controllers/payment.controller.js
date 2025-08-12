@@ -25,8 +25,8 @@ const verifyTransactionWithWebhook = async (req, res) => {
     }
 
     try {
-        const reference = data.paymentReference
-        const amountPaid = data.amountPaid / 100
+        const reference = data.reference
+        const amountPaid = data.amount / 100
         const transaction = await Transaction.findOne({ reference }).lean()
         if(!transaction){
             logger.warn(`transaction not found for reference: ${reference}`)
