@@ -745,7 +745,6 @@ Headers:
 Body:
 ```json
 {
-  "email": "user@example.com",
   "amount": 5000
 }
 ```
