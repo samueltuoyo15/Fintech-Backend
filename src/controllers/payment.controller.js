@@ -55,11 +55,11 @@ const verifyTransactionWithWebhook = async (req, res) => {
 
 const fundAccount = async (req, res) => {
   logger.info("Received request to fund account")
-  const { email, amount } = req.body
+  const { amount } = req.body
   const userId = req.user._id
 
-  if (!email || !amount) {
-    return res.status(400).json({ error: "Email and Amount are required" })
+  if (!amount) {
+    return res.status(400).json({ error: "Amount are required" })
   }
 
   if(amount < 100){
@@ -68,7 +68,8 @@ const fundAccount = async (req, res) => {
   
   try {
     
-    const userAccount = await Account.findOne({ user: userId })
+    const userAccount = await Account.findOne({ user: userId }).populate("user")
+    console.log(userAccount)
     if (!userAccount) {
       return res.status(404).json({ error: "Account not found" })
     }
@@ -77,7 +78,7 @@ const fundAccount = async (req, res) => {
 
     const response = await initializeTransaction({
       amount: parseFloat(amount),
-      customerEmail: email,
+      customerEmail: userAccount.user.email,
       paymentReference: paymentRef,
       paymentDescription: "Wallet Funding",
       redirectUrl: `${process.env.FRONTEND_DOMAIN}/dashboard`
