@@ -168,7 +168,6 @@ const buyAirtimeSubscription = async (req, res) => {
       }
     })
 
-    if (response.status === 201) {
       account.wallet_balance -= amount
       account.total_funding += amount
 
@@ -190,10 +189,7 @@ const buyAirtimeSubscription = async (req, res) => {
       account.transactions.push(transaction._id)
       await account.save()
 
-      return res.status(200).json(response.data)
-    } else {
-      return res.status(response.status).json({ error: "Failed to subscribe to airtime" })
-    }
+      return res.status(200).json({ success: true, message: "Airtime sent successfully"})
   } catch (error) {
     console.error("error buying airtime:", error)
     return res.status(500).json({ success: false, error: error || "Internal server error" })
@@ -240,7 +236,6 @@ const payElectricityBills = async (req, res) => {
       }
     })
 
-    if (response.status === 201) {
       account.wallet_balance -= amount
       account.total_funding += amount
       const paymentRef = "REF_" + nanoid()
@@ -256,10 +251,7 @@ const payElectricityBills = async (req, res) => {
 
       account.transactions.push(transaction._id)
       await account.save()
-      return res.status(200).json(response.data)
-    } else {
-      return res.status(response.status).json({ error: "Failed to pay electricity bill" })
-    }
+      return res.status(200).json({ success: true, message: "success"})
   } catch (error) {
     return res.status(500).json({ success: false, error: "Internal server error" })
   }
