@@ -10,7 +10,7 @@ dotenv.config()
 const getAllTransactions = async (req, res) => {
   const { userId } = req.params
   try {
-    const account = await Account.findOne({ user: userId }).populate("transactions")
+    const account = await Account.findOne({ user: userId }).populate("transactions").lean()
     if (!account) return res.status(404).json({ error: "Account not found" })
     return res.status(200).json({ suceess: true, transactions: account })
   } catch (error) {
@@ -18,95 +18,85 @@ const getAllTransactions = async (req, res) => {
   }
 }
 
-
 const buyDataSubcription = async (req, res) => {
   logger.info("Received request for data subscription")
-
-  const { network, phone, plan, ported_number } = req.body
+  const paymentRef = "REF_" + nanoid()
+  const { phone, service, plan_amount, network } = req.body
   const userId = req.user._id
 
-  if (!network || !phone || !plan || typeof ported_number === "undefined") {
-    return res.status(400).json({ error: "Network, phone, plan, and ported_number are required" })
+  if (!phone || !network || !plan_amount || !service) {
+    return res.status(400).json({ error: "Network, phone service and plan_amount are required" })
   }
 
   try {
     const account = await Account.findOne({ user: userId })
     if (!account) return res.status(404).json({ error: "Account not found" })
 
-    const selectedPlan = dataPlans.find(p => p.id === Number(plan))
-    logger.info("selected plan", selectedPlan)
 
-    if (!selectedPlan) {
-      return res.status(400).json({ error: "Data plan is not available" })
-    }
-
-    if (account.wallet_balance < selectedPlan.amount) {
+    if (account.wallet_balance < plan_amount) {
       return res.status(400).json({ error: "Insufficient wallet balance" })
     }
 
-    let response
+    const response = await axios.get(`${process.env.VTU_AFRICA_DOMAIN}/data/`, {
+      params: {  
+        apikey: process.env.VTUAFRICA_API_KEY,
+        service,
+        MobileNumber: phone,
+        DataPlan: plan_amount.toString(),
+        ref: `REF_${Date.now()}`,
+   
+      },
+      paramsSerializer: params => {
+        return Object.entries(params).map(([key, val]) => `${key}=${encodeURIComponent(val)}`).join('&');
+      }
+    })
 
-    try {
-      response = await axios.post(`${process.env.EXTERNAL_BACKEND_DOMAIN}/data`, {
-        network,
-        mobile_number: phone,
-        plan,
-        ported_number
-      }, {
-        headers: {
-          Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
-        },
-        timeout: 10000
-      })
-    } catch (apiError) {
-      const status = apiError.response?.status || 500
-      const message = apiError.response?.data?.error || "Failed to connect to data provider"
-      logger.error("Data API error", apiError.response?.data || apiError.message)
-      return res.status(status).json({ error: message })
-    }
-
-    const data = response.data
-
-    const rawAmount = data.plan_amount ?? selectedPlan.amount
-    const amount = parseFloat(rawAmount)
-
-    if (isNaN(amount)) {
+    if (isNaN(plan_amount)) {
       return res.status(500).json({ error: "Invalid amount received from data API" })
     }
 
-    account.wallet_balance -= amount
-    account.total_funding += amount
+    account.wallet_balance -= response.data.description.Amount_Charged
+    account.total_funding += response.data.description.Amount_Charged
 
-    const paymentRef = "REF_" + nanoid()
+    
 
     const transaction = await Transaction.create({
       user: userId,
       type: "data",
-      amount,
+      amount: response.data.description.Amount_Charged,
       status: "success",
       reference: paymentRef,
       metadata: {
         status: "successful",
-        plan: plan,
-        network: data.network,
-        plan_amount: amount,
-        plan_name: data.plan_name,
-        date: data.create_date,
-        ported_number: !!ported_number
+        plan: `${response.data.description.ProductName} - ${response.data.description.DataSize}`,
+        service: service,
+        plan_amount: response.data.description.Amount_Charged,
+        plan_name: response.data.description.ProductName,
+        date: response.data.description.transaction_date,
       }
     })
 
     account.transactions.push(transaction._id)
     await account.save()
-
-    logger.info("Data subscription successful", data)
+ 
+    console.log("Data subscription successful", response.data.description)
 
     return res.status(201).json({
       success: true,
-      message: `You successfully purchased data of plan ${data.plan_name}`
+      message: `You successfully purchased data plan of ${response.data.description.ProductName} - ${response.data.description.DataSize} valid for: ${response.data.description.Validity}`
     })
   } catch (err) {
     console.error("error buying data:", err)
+    await Transaction.create({
+      user: userId,
+      type: "data",
+      status: "failed",
+      reference: paymentRef,
+      metadata: {
+        service: service,
+        date: Date.now()
+      }
+    })
     return res.status(500).json({ success: false, error: "Internal server error" })
   }
 }
@@ -128,7 +118,7 @@ const getAllDataTransactions = async (req, res) => {
 const queryDataTransaction = async (req, res) => {
   const { userId, transactionId } = req.params
   try {
-    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "data" })
+    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "data" }).lean()
     if (!transaction) return res.status(404).json({ error: "Data transaction not found" })
     return res.status(200).json(transaction)
   } catch (error) {
@@ -138,9 +128,9 @@ const queryDataTransaction = async (req, res) => {
 
 const buyAirtimeSubscription = async (req, res) => {
   logger.info("Received request for airtime subscription")
-  const { network, phone, amount, airtime_type, ported_number } = req.body
+  const { network, phone, amount } = req.body
   const userId = req.user._id
-  if (!network || !phone || !amount || !airtime_type || typeof ported_number === "undefined") {
+  if (!network || !phone || !amount) {
     return res.status(400).json({ error: "Network, phone, airtime type, amount, and ported number are required" })
   }
 
@@ -151,20 +141,22 @@ const buyAirtimeSubscription = async (req, res) => {
   try {
     const account = await Account.findOne({ user: userId })
     if (!account) return res.status(404).json({ error: "Account not found" })
-
+  
     if (account.wallet_balance < amount) {
       return res.status(400).json({ error: "Insufficient wallet balance." })
     }
 
-    const response = await axios.post(`${process.env.EXTERNAL_BACKEND_DOMAIN}/topup`, {
-      network,
-      mobile_number: phone,
-      amount,
-      airtime_type,
-      ported_number
-    }, {
-      headers: {
-        Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
+    
+    const response = await axios.get(`${process.env.VTU_AFRICA_DOMAIN}/airtime/`, {
+      params: {  
+        apikey: process.env.VTUAFRICA_API_KEY,
+        network,
+        phone,
+        amount,
+        ref: `REF_${Date.now()}` 
+      },
+      paramsSerializer: params => {
+        return Object.entries(params).map(([key, val]) => `${key}=${encodeURIComponent(val)}`).join('&');
       }
     })
 
@@ -181,14 +173,14 @@ const buyAirtimeSubscription = async (req, res) => {
         metadata: {
           status: "successful",
           network: response.data.network,
-          date: response.data.create_date,
-          ported_number: !!ported_number
+          date: response.data.create_date
         }
       })
 
       account.transactions.push(transaction._id)
       await account.save()
 
+      logger.info("airtime sent successfully", response.data)
       return res.status(200).json({ success: true, message: "Airtime sent successfully"})
   } catch (error) {
     console.error("error buying airtime:", error)
@@ -420,7 +412,7 @@ const purchaseBulkSms = async (req, res) => {
       return res.status(400).json({ success: false, error: `Insufficient balance. Required: ${totalCharge}, Available: ${account.wallet_balance}` })
     }
 
-    const response = await axios.get(`https://vtuafrica.com.ng/portal/api/sms/`, {
+    const response = await axios.get(`${process.env.VTU_AFRICA_DOMAIN}/sms/`, {
       params: {  
         apikey: process.env.VTUAFRICA_API_KEY,
         message: message,

@@ -1,16 +1,10 @@
 import joi from "joi"
 
 const buyAirtimeValidationSchema = joi.object({
-  network: joi.number().required().messages({
-    "any.only": "Network must be an id of an integer",
-    "string.base": "Network must be a integer",
+  network: joi.string().valid("mtn", "airtel", "glo", "9mobile").required().messages({
+    "any.only": "Network must be either mtn, airtel, glo or 9mobile",
+    "string.base": "Network must be a string",
     "any.required": "Network is required"
-  }),
-
-  airtime_type: joi.string().valid("VTU", "Awuf4U", "Share and Sell").required().messages({
-    "any.only": "Airtime type must be one of VTU, Awuf4U, or Share and Sell",
-    "string.base": "Airtime type must be a string",
-    "any.required": "Airtime type is reaquired"
   }),
 
   phone: joi.string().pattern(/^(0|\+234)[789][01]\d{8}$/).required().messages({
@@ -21,11 +15,6 @@ const buyAirtimeValidationSchema = joi.object({
   amount: joi.number().required().messages({
     "number.base": "amount must be a number (e.g., 200, 500, 1000)",
     "any.required": "amount is required"
-  }),
-
-  ported_number: joi.boolean().required().messages({
-    "boolean.base": "Ported_number must be true or false",
-    "any.required": "Ported_number is required"
   })
 })
 
