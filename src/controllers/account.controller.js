@@ -305,8 +305,9 @@ const buyCableSubscription = async (req, res) => {
       return res.status(400).json({ error: "Insufficient wallet balance." })
     }
 
-    const response = await axios.get(`${process.env.EXTERNAL_BACKEND_DOMAIN}/merchant-verify`, {
+    const response = await axios.get(`${process.env.VTU_AFRICA_DOMAIN}/merchant-verify`, {
       params: {
+      apikey: process.env.VTUAFRICA_API_KEY,
       serviceName: "CableTV",
       service: cable_name,
       smartNo: smart_card_number,
@@ -317,12 +318,13 @@ const buyCableSubscription = async (req, res) => {
       }   
     })
 
+      console.log("Cable tv response", response.data)
       account.wallet_balance -= Number(response.data.description.Amount_Charged)
 
       const transaction = await Transaction.create({
         user: userId,
         type: "cable",
-        amount:  Number(response.data.description.Amount_Charged),
+        amount: Number(response.data.description.Amount_Charged),
         status: "success",
         reference: paymentRef,
         metadata: {
@@ -342,6 +344,7 @@ const buyCableSubscription = async (req, res) => {
       user: userId,
       type: "cable",
       status: "failed",
+      amount: 0,
       reference: paymentRef,
       metadata: {
         cable_name,
