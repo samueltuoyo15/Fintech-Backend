@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { getAllTransactions, buyDataSubcription, buyAirtimeSubscription, getAllDataTransactions, queryDataTransaction, queryAirtimeTransaction, payElectricityBills, queryElectricityBill, buyCableSubscription, queryCableSubscription, validateUIC, validateMeter, purchaseAirtime2Cash, purchaseBulkSms } from "../controllers/account.controller.js"
+import { getAllTransactions, buyDataSubcription, buyAirtimeSubscription, getAllDataTransactions, queryDataTransaction, queryAirtimeTransaction, payElectricityBills, queryElectricityBill, buyCableSubscription, queryCableSubscription, purchaseAirtime2Cash, purchaseBulkSms } from "../controllers/account.controller.js"
 import { authenticateUser } from "../middlewares/auth.middleware.js"
 import validateDataReqBody from "../middlewares/data.schema.js"
 import validateAirtimeReqBody from "../middlewares/airtime.schema.js"
@@ -21,7 +21,6 @@ router.post("/bulk-sms", authenticateUser, purchaseBulkSms)
 router.get("/query-electricity-bill", authenticateUser, queryElectricityBill)
 router.post("/cable", authenticateUser, validateCableReqBody, buyCableSubscription)
 router.get("/query-electricity-bill", authenticateUser, queryCableSubscription)
-router.get("/validate-uic", authenticateUser, validateUIC)
-router.get("/validate-meter", authenticateUser, validateMeter)
+
 
 export default router

@@ -2,7 +2,6 @@ import express from "express"
 import helmet from "helmet"
 import logger from "./common/utils/logger.js"
 import cors from "cors"
-import "./queues/transaction.worker.js"
 import cookieParser from "cookie-parser"
 import { createBasicRateLimiter } from "./middlewares/rate.limit.js"
 import errorHandler from "./middlewares/error.handler.js"
@@ -10,8 +9,8 @@ import { requestLogger } from "./middlewares/request.logger.js"
 import { connectToDb } from "./common/config/db.config.js"
 import authRoutes from "./routes/auth.route.js"
 import accountRoutes from "./routes/account.route.js"
-import planRoutes from "./routes/plans.route.js"
 import paymentRoutes from "./routes/payment.route.js"
+import "./queues/transaction.worker.js"
 import dotenv from "dotenv"
 dotenv.config()
 
@@ -51,7 +50,6 @@ app.get("/", (req, res) => {
 app.use("/api/v1/auth", authRoutes)
 app.use("/api/v1/subscribe", accountRoutes)
 app.use("/api/v1/payment", paymentRoutes)
-app.use("/api/v1/plans", planRoutes)
 app.use(errorHandler)
 
 const startServer = async () => {

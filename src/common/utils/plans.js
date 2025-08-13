@@ -179,13 +179,6 @@ const dataPlans = [
     { Value: "25GB", Service: "9MOBILEGIFT", DataPlan: "25000", Description: "9MOBILE Gifting Data", Validity: "30-Days", PortalOwners: "₦17820", Resellers: "₦17830", Agents: "₦17840", FreeUsers: "₦17850", Status: "Active" }
 ];
 
-const networkList = [
-  { id: 1, name: "MTN" },
-  { id: 2, name: "GLO" },
-  { id: 3, name: "9MOBILE" },
-  { id: 4, name: "AIRTEL" },
-  { id: 5, name: "SMILE" }
-]
 
 const cableList = [
   { id: 1, name: "GOTV" },
@@ -234,19 +227,5 @@ const cablePlanList = [
   { id: 47, name: "Supa monthly", amount: 15700 }
 ]
 
-const discoList = [
-  { id: 1, name: "Ikeja Electric" },
-  { id: 2, name: "Eko Electric" },
-  { id: 3, name: "Abuja Electric" },
-  { id: 4, name: "Kano Electric" },
-  { id: 5, name: "Enugu Electric" },
-  { id: 6, name: "Port Harcourt Electric" },
-  { id: 7, name: "Ibadan Electric" },
-  { id: 8, name: "Kaduna Electric" },
-  { id: 9, name: "Jos Electric" },
-  { id: 10, name: "Benin Electric" },
-  { id: 11, name: "Yola Electric" }
-]
 
-
-export { dataPlans, networkList, cableList,  cablePlanList, discoList }
+export { dataPlans, networkList, cableList,  cablePlanList }

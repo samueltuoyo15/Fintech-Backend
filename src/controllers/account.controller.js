@@ -1,7 +1,6 @@
 import logger from "../common/utils/logger.js"
 import Account from "../models/account.model.js"
 import Transaction from "../models/transaction.model.js"
-import { dataPlans } from "../common/utils/plans.js"
 import { nanoid } from "nanoid"
 import axios from "axios"
 import dotenv from "dotenv"
@@ -55,22 +54,19 @@ const buyDataSubcription = async (req, res) => {
       return res.status(500).json({ error: "Invalid amount received from data API" })
     }
 
-    account.wallet_balance -= response.data.description.Amount_Charged
-    account.total_funding += response.data.description.Amount_Charged
-
-    
+    account.wallet_balance -= Number(Number(response.data.description.Amount_Charged))
 
     const transaction = await Transaction.create({
       user: userId,
       type: "data",
-      amount: response.data.description.Amount_Charged,
+      amount: Number(response.data.description.Amount_Charged),
       status: "success",
       reference: paymentRef,
       metadata: {
         status: "successful",
         plan: `${response.data.description.ProductName} - ${response.data.description.DataSize}`,
         service: service,
-        plan_amount: response.data.description.Amount_Charged,
+        plan_amount: Number(response.data.description.Amount_Charged),
         plan_name: response.data.description.ProductName,
         date: response.data.description.transaction_date,
       }
@@ -130,6 +126,9 @@ const buyAirtimeSubscription = async (req, res) => {
   logger.info("Received request for airtime subscription")
   const { network, phone, amount } = req.body
   const userId = req.user._id
+  
+   const paymentRef = "REF_" + nanoid()
+
   if (!network || !phone || !amount) {
     return res.status(400).json({ error: "Network, phone, airtime type, amount, and ported number are required" })
   }
@@ -161,9 +160,7 @@ const buyAirtimeSubscription = async (req, res) => {
     })
 
       account.wallet_balance -= amount
-      account.total_funding += amount
 
-      const paymentRef = "REF_" + nanoid()
       const transaction = await Transaction.create({
         user: userId,
         type: "airtime",
@@ -171,7 +168,6 @@ const buyAirtimeSubscription = async (req, res) => {
         status: "success",
         reference: paymentRef,
         metadata: {
-          status: "successful",
           network: response.data.network,
           date: response.data.create_date
         }
@@ -184,6 +180,18 @@ const buyAirtimeSubscription = async (req, res) => {
       return res.status(200).json({ success: true, message: "Airtime sent successfully"})
   } catch (error) {
     console.error("error buying airtime:", error)
+     await Transaction.create({
+      user: userId,
+      type: "airtime",
+      status: "failed",
+      amount,
+      reference: paymentRef,
+      metadata: {
+        network,
+        phone, 
+        date: Date.now()
+      }
+    })
     return res.status(500).json({ success: false, error: error || "Internal server error" })
   }
 }
@@ -191,7 +199,7 @@ const buyAirtimeSubscription = async (req, res) => {
 const queryAirtimeTransaction = async (req, res) => {
   const { userId, transactionId } = req.params
   try {
-    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "airtime" })
+    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "airtime" }).lean()
     if (!transaction) return res.status(404).json({ error: "Airtime transaction not found" })
     return res.status(200).json(transaction)
   } catch (error) {
@@ -200,8 +208,9 @@ const queryAirtimeTransaction = async (req, res) => {
 }
 
 const payElectricityBills = async (req, res) => {
-  const { disco_name, amount, meter_number, meter_type } = req.body
+  const { disco_name, meter_number, meter_type, amount } = req.body
   const userId = req.user._id
+ const paymentRef = "REF_" + nanoid()
   if (!disco_name || !amount || !meter_number || !meter_type) {
     return res.status(400).json({ error: "Disco name, amount, meter number, and meter type are required" })
   }
@@ -217,20 +226,21 @@ const payElectricityBills = async (req, res) => {
       return res.status(400).json({ error: "Insufficient wallet balance." })
     }
 
-    const response = await axios.post(`${process.env.EXTERNAL_BACKEND_DOMAIN}/billpayment`, {
-      disco_name,
-      amount,
-      meter_number,
-      meter_type
-    }, {
-      headers: {
-        Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
+     const response = await axios.get(`${process.env.VTU_AFRICA_DOMAIN}/electric/`, {
+      params: {  
+        apikey: process.env.VTUAFRICA_API_KEY,
+        service: disco_name,
+        meterNo: meter_number,
+        metertype: meter_type,
+        amount,
+        ref: `REF_${Date.now()}` 
+      },
+      paramsSerializer: params => {
+        return Object.entries(params).map(([key, val]) => `${key}=${encodeURIComponent(val)}`).join('&');
       }
     })
-
+      console.log("Electircity bill payment", response.data.description)
       account.wallet_balance -= amount
-      account.total_funding += amount
-      const paymentRef = "REF_" + nanoid()
 
       const transaction = await Transaction.create({
         user: userId,
@@ -238,13 +248,32 @@ const payElectricityBills = async (req, res) => {
         amount: amount,
         status: "success",
         reference: paymentRef,
-        metadata: {}
+        metadata: {
+          date: Date.now(),
+          disco_name,
+          meter_type,
+          meter_number,
+        }
       })
 
       account.transactions.push(transaction._id)
       await account.save()
-      return res.status(200).json({ success: true, message: "success"})
+      return res.status(200).json({ success: true, message: "electricity bill payment was successful"})
   } catch (error) {
+    console.error("error paying electric bills", error)
+     await Transaction.create({
+      user: userId,
+      type: "electricity",
+      status: "failed",
+      amount,
+      reference: paymentRef,
+      metadata: {
+        disco_name,
+        meter_type,
+        meter_number,
+        date: Date.now()
+      }
+    })
     return res.status(500).json({ success: false, error: "Internal server error" })
   }
 }
@@ -252,7 +281,7 @@ const payElectricityBills = async (req, res) => {
 const queryElectricityBill = async (req, res) => {
   const { userId, transactionId } = req.params
   try {
-    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "electricity" })
+    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "electricity" }).lean()
     if (!transaction) return res.status(404).json({ error: "Electricity transaction not found" })
     return res.status(200).json(transaction)
   } catch (error) {
@@ -261,55 +290,65 @@ const queryElectricityBill = async (req, res) => {
 }
 
 const buyCableSubscription = async (req, res) => {
-  const { cable_name, cable_plan, smart_card_number, amount } = req.body
+  const { cable_name, smart_card_number, variation } = req.body
   const userId = req.user._id
-  if (!cable_name || !cable_plan || !smart_card_number || !amount) {
-    return res.status(400).json({ error: "Cable name, cable plan, smart card number, amount, and user ID are required" })
+   const paymentRef = "REF_" + nanoid()
+  if (!cable_name || !smart_card_number || !variation) {
+    return res.status(400).json({ error: "Cable name, cable plan, smart card number, variation, and user ID are required" })
   }
 
-    if(amount < 100){
-    return res.status(400).json({ error: "Amount must be greater than 100NGN"})
-  }
-  
   try {
     const account = await Account.findOne({ user: userId })
     if (!account) return res.status(404).json({ error: "Account not found" })
 
-    if (account.wallet_balance < amount) {
+    if (account.wallet_balance < 100) {
       return res.status(400).json({ error: "Insufficient wallet balance." })
     }
 
-    const response = await axios.post(`${process.env.EXTERNAL_BACKEND_DOMAIN}/cablesub`, {
-      cable_name,
-      cable_plan,
-      smart_card_number
-    }, {
-      headers: {
-        Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
-      }
+    const response = await axios.get(`${process.env.EXTERNAL_BACKEND_DOMAIN}/merchant-verify`, {
+      params: {
+      serviceName: "CableTV",
+      service: cable_name,
+      smartNo: smart_card_number,
+      variation,
+      },
+       paramsSerializer: params => {
+        return Object.entries(params).map(([key, val]) => `${key}=${encodeURIComponent(val)}`).join('&');
+      }   
     })
 
-    if (response.status === 201) {
-      account.wallet_balance -= amount
-      account.total_funding += amount
-      const paymentRef = "REF_" + nanoid()
+      account.wallet_balance -= Number(response.data.description.Amount_Charged)
 
       const transaction = await Transaction.create({
         user: userId,
         type: "cable",
-        amount: amount,
+        amount:  Number(response.data.description.Amount_Charged),
         status: "success",
         reference: paymentRef,
-        metadata: {}
+        metadata: {
+         cable_name,
+         smart_card_number,
+         product_name: response.data.description.productName,
+         date: Date.now()
+        }
       })
 
       account.transactions.push(transaction._id)
       await account.save()
       return res.status(200).json(response.data)
-    } else {
-      return res.status(response.status).json({ error: "Failed to subscribe to cable" })
-    }
   } catch (error) {
+    console.error("failed to subscribe to cable", error)
+     await Transaction.create({
+      user: userId,
+      type: "cable",
+      status: "failed",
+      reference: paymentRef,
+      metadata: {
+        cable_name,
+        smart_card_number,
+        date: Date.now()
+      }
+    })
     return res.status(500).json({ success: false, error: "Internal server error" })
   }
 }
@@ -317,45 +356,9 @@ const buyCableSubscription = async (req, res) => {
 const queryCableSubscription = async (req, res) => {
   const { userId, transactionId } = req.params
   try {
-    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "cable" })
+    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "cable" }).lean()
     if (!transaction) return res.status(404).json({ error: "Cable transaction not found" })
     return res.status(200).json(transaction)
-  } catch (error) {
-    return res.status(500).json({ success: false, error: "Internal server error" })
-  }
-}
-
-const validateUIC = async (req, res) => {
-  const { smart_card_number, cable_name } = req.params
-  if (!smart_card_number || !cable_name) {
-    return res.status(400).json({ error: "Smart card number and cable name are required" })
-  }
-  try {
-    const response = await axios.get(`${process.env.EXTERNAL_BACKEND_DOMAIN}/validateiuc?smart_card_number=${smart_card_number}&&cable_name=${cable_name}`, {
-      headers: {
-        Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
-      }
-    })
-    return res.status(200).json(response.data)
-  } catch (error) {
-    return res.status(500).json({ success: false, error: "Internal server error" })
-  }
-}
-
-const validateMeter = async (req, res) => {
-  const { meter_number, disco_name, meter_type } = req.params
-  if (!meter_number || !disco_name || !meter_type) {
-    return res.status(400).json({ error: "Meter number, disco name, and meter type are required" })
-  }
-
-  try {
-    const response = await axios.get(`${process.env.EXTERNAL_BACKEND_DOMAIN}/validatemeter?meternumber=${meter_number}&disconame=${disco_name}&metertype=${meter_type}`, {
-      headers: {
-        Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
-      }
-    })
-
-    return res.status(200).json(response.data)
   } catch (error) {
     return res.status(500).json({ success: false, error: "Internal server error" })
   }
@@ -465,8 +468,6 @@ export {
   queryElectricityBill,
   buyCableSubscription,
   queryCableSubscription,
-  validateUIC,
-  validateMeter,
   purchaseAirtime2Cash,
   purchaseBulkSms
 }
