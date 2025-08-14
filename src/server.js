@@ -10,6 +10,7 @@ import { connectToDb } from "./common/config/db.config.js"
 import authRoutes from "./routes/auth.route.js"
 import accountRoutes from "./routes/account.route.js"
 import paymentRoutes from "./routes/payment.route.js"
+import plansRoute from "./routes/plans.route.js"
 import "./queues/transaction.worker.js"
 import dotenv from "dotenv"
 dotenv.config()
@@ -41,7 +42,7 @@ app.use(helmet())
 app.use(express.json())
 app.use(cookieParser())
 app.use(express.urlencoded({ extended: true }))
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.status(200).json({
     message: "Welcome to the API and server is running on port 5000",
     status: "success"
@@ -50,6 +51,7 @@ app.get("/", (req, res) => {
 app.use("/api/v1/auth", authRoutes)
 app.use("/api/v1/subscribe", accountRoutes)
 app.use("/api/v1/payment", paymentRoutes)
+app.use("/api/v1/plans", plansRoute)
 app.use(errorHandler)
 
 const startServer = async () => {

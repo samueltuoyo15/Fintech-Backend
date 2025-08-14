@@ -179,53 +179,9 @@ const dataPlans = [
     { Value: "25GB", Service: "9MOBILEGIFT", DataPlan: "25000", Description: "9MOBILE Gifting Data", Validity: "30-Days", PortalOwners: "₦17820", Resellers: "₦17830", Agents: "₦17840", FreeUsers: "₦17850", Status: "Active" }
 ];
 
-
-const cableList = [
-  { id: 1, name: "GOTV" },
-  { id: 2, name: "DSTV" },
-  { id: 3, name: "STARTIME" }
-]
-
 const cablePlanList = [
-  { id: 2, name: "GOtv Max", amount: 8500 },
-  { id: 5, name: "Asian Bouqet", amount: 24250 },
-  { id: 6, name: "DStv Yanga", amount: 6000 },
-  { id: 7, name: "DStv Compact", amount: 19000 },
-  { id: 8, name: "DStv Compact Plus", amount: 30000 },
-  { id: 9, name: "DStv Premium", amount: 44000 },
-  { id: 10, name: "NOVA", amount: 1700 },
-  { id: 11, name: "Classic - 5000Naira - 1 Month", amount: 5500 },
-  { id: 12, name: "Basic - 3300Naira - 1 Month", amount: 3700 },
-  { id: 13, name: "Smart - 3800Naira - 1 Month", amount: 4700 },
-  { id: 14, name: "Nova - 1700Naira - 1 Month", amount: 1900 },
-  { id: 15, name: "Super - 7000 Naira - 1 Month", amount: 9000 },
-  { id: 16, name: "GOtv Jinja", amount: 3900 },
-  { id: 17, name: "GOtv Jolli", amount: 5800 },
-  { id: 18, name: "GOtv Smallie", amount: 1575 },
-  { id: 19, name: "DStv Confam", amount: 11000 },
-  { id: 20, name: "DStv Padi", amount: 4400 },
-  { id: 21, name: "DStv Great Wall Standalone", amount: 1725 },
-  { id: 23, name: "DStv Asia", amount: 12400 },
-  { id: 24, name: "DStv Premium French", amount: 57000 },
-  { id: 25, name: "DStv Premium Asia", amount: 42000 },
-  { id: 26, name: "DStv Confam + ExtraView", amount: 14400 },
-  { id: 27, name: "DStv Yanga + ExtraView", amount: 10100 },
-  { id: 28, name: "DStv Padi + ExtraView", amount: 6950 },
-  { id: 29, name: "DStv Compact + Extra View", amount: 20700 },
-  { id: 30, name: "DStv Premium + Extra View", amount: 42000 },
-  { id: 31, name: "DStv Compact Plus - Extra View", amount: 37400 },
-  { id: 32, name: "DStv HDPVR Access Service", amount: 2900 },
-  { id: 33, name: "ExtraView Access", amount: 5000 },
-  { id: 34, name: "GOtv Smallie - Monthly", amount: 1900 },
-  { id: 35, name: "GOtv Smallie - Quarterly", amount: 4175 },
-  { id: 36, name: "GOtv Smallie - Yearly", amount: 12300 },
-  { id: 37, name: "Nova - 600 Naira - 1 Week", amount: 600 },
-  { id: 38, name: "Basic - 1100 Naira - 1 Week", amount: 1250 },
-  { id: 39, name: "Smart - 1300Naira - 1 Week", amount: 1550 },
-  { id: 40, name: "Classic - 1700Naira - 1 Week", amount: 1900 },
-  { id: 41, name: "Super - 2700Naira - 1 Week", amount: 3000 },
-  { id: 47, name: "Supa monthly", amount: 15700 }
+  
 ]
 
 
-export { dataPlans, networkList, cableList,  cablePlanList }
+export { dataPlans, cablePlanList }
