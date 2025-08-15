@@ -1,4 +1,4 @@
-import { dataPlans } from "../common/utils/plans.js"
+import { dataPlans, electricityPlanList } from "../common/utils/plans.js"
 import { Router } from "express"
 import { redis } from "../common/config/redis.config.js"
 
@@ -40,6 +40,28 @@ router.get("/data-plans", async (req, res) => {
         success: true,
         message: "List of Data Plans",
         data: result
+    })
+})
+
+router.get("/electricity-plans", async (req, res) => {
+    const cacheKey = `electricityPlans`
+    const cachedElectricityPlans = await redis.get(cacheKey)
+    if (cachedElectricityPlans) {
+        return res.status(200).json({
+            success: true,
+            message: "Electricity plans retrieved successfully",
+            source: "redis-cache",
+            data: JSON.parse(cachedElectricityPlans)
+        })
+    }
+    const result = electricityPlanList
+    await redis.set(cacheKey, JSON.stringify(result), "EX", 8000)
+
+    return res.status(200).json({
+        success: true,
+        source: "live-data",
+        message: "List of Electricity Plans",
+        data: result    
     })
 })
 

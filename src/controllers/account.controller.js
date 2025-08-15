@@ -160,6 +160,7 @@ const buyAirtimeSubscription = async (req, res) => {
     })
 
       account.wallet_balance -= amount
+      account.total_spent += amount
 
       const transaction = await Transaction.create({
         user: userId,
@@ -241,7 +242,7 @@ const payElectricityBills = async (req, res) => {
     })
       console.log("Electircity bill payment", response.data.description)
       account.wallet_balance -= amount
-
+      account.total_spent += amount
       const transaction = await Transaction.create({
         user: userId,
         type: "electricity",
@@ -320,7 +321,7 @@ const buyCableSubscription = async (req, res) => {
 
       console.log("Cable tv response", response.data)
       account.wallet_balance -= Number(response.data.description.Amount_Charged)
-
+      account.total_spent += Number(response.data.description.Amount_Charged)
       const transaction = await Transaction.create({
         user: userId,
         type: "cable",
@@ -437,7 +438,7 @@ const purchaseBulkSms = async (req, res) => {
     }
 
     account.wallet_balance -= totalCharge
-
+    account.total_spent += totalCharge
     const transaction = await Transaction.create({
       user: userId,
       type: "bulk_sms",

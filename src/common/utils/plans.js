@@ -179,9 +179,20 @@ const dataPlans = [
     { Value: "25GB", Service: "9MOBILEGIFT", DataPlan: "25000", Description: "9MOBILE Gifting Data", Validity: "30-Days", PortalOwners: "₦17820", Resellers: "₦17830", Agents: "₦17840", FreeUsers: "₦17850", Status: "Active" }
 ];
 
-const cablePlanList = [
-  
+const electricityPlanList = [
+  { serviceCode: "aba-electric", displayName: "Aba Electricity Distribution Company" },
+  { serviceCode: "abuja-electric", displayName: "Abuja Electricity Distribution Company" },
+  { serviceCode: "benin-electric", displayName: "Benin Electricity Distribution Company" },
+  { serviceCode: "eko-electric", displayName: "Eko Electricity Distribution Company" },
+  { serviceCode: "enugu-electric", displayName: "Enugu Electricity Distribution Company" },
+  { serviceCode: "ibadan-electric", displayName: "Ibadan Electricity Distribution Company" },
+  { serviceCode: "ikeja-electric", displayName: "Ikeja Electricity Distribution Company" },
+  { serviceCode: "jos-electric", displayName: "Jos Electricity Distribution Company" },
+  { serviceCode: "kaduna-electric", displayName: "Kaduna Electricity Distribution Company" },
+  { serviceCode: "kano-electric", displayName: "Kano Electricity Distribution Company" },
+  { serviceCode: "portharcourt-electric", displayName: "Port Harcourt Electricity Distribution Company" },
+  { serviceCode: "yola-electric", displayName: "Yola Electricity Distribution Company" }
 ]
 
 
-export { dataPlans, cablePlanList }
+export { dataPlans, electricityPlanList }
