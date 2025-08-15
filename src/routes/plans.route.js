@@ -1,3 +1,9 @@
+import { dataPlans } from "../common/utils/plans.js"
+import { Router } from "express"
+import { redis } from "../common/config/redis.config.js"
+
+const router = Router()
+
 router.get("/data-plans", async (req, res) => {
     const { network } = req.query
 
@@ -36,3 +42,5 @@ router.get("/data-plans", async (req, res) => {
         data: result
     })
 })
+
+export default router

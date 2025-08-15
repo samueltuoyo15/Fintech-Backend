@@ -27,6 +27,7 @@ const buyDataSubcription = async (req, res) => {
     return res.status(400).json({ error: "Network, phone service and plan_amount are required" })
   }
 
+
   try {
     const account = await Account.findOne({ user: userId })
     if (!account) return res.status(404).json({ error: "Account not found" })
@@ -41,7 +42,7 @@ const buyDataSubcription = async (req, res) => {
         apikey: process.env.VTUAFRICA_API_KEY,
         service,
         MobileNumber: phone,
-        DataPlan: plan_amount.toString(),
+        DataPlan: plan_amount,
         ref: `REF_${Date.now()}`,
    
       },
@@ -50,16 +51,14 @@ const buyDataSubcription = async (req, res) => {
       }
     })
 
-    if (isNaN(plan_amount)) {
-      return res.status(500).json({ error: "Invalid amount received from data API" })
-    }
-
-    account.wallet_balance -= Number(Number(response.data.description.Amount_Charged))
+    console.log("api response", response.data.description)
+    account.wallet_balance -= response.data.description.Amount_Charged
+    account.total_spent += response.data.description.Amount_Charged
 
     const transaction = await Transaction.create({
       user: userId,
       type: "data",
-      amount: Number(response.data.description.Amount_Charged),
+      amount: response.data.description.Amount_Charged,
       status: "success",
       reference: paymentRef,
       metadata: {
@@ -87,6 +86,7 @@ const buyDataSubcription = async (req, res) => {
       user: userId,
       type: "data",
       status: "failed",
+      amount: 0,
       reference: paymentRef,
       metadata: {
         service: service,

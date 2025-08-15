@@ -23,6 +23,10 @@ const accountSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    total_spent: {
+        type: Number,
+        default: 0
+    },
     wallet_summary: {
         type: Object,
         default: {}
