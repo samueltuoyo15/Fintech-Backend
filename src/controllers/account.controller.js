@@ -6,12 +6,26 @@ import axios from "axios"
 import dotenv from "dotenv"
 dotenv.config()
 
+import { redis } from "../common/config/redis.config.js"
+
 const getAllTransactions = async (req, res) => {
-  const { userId } = req.params
+  const userId = req.user._id
+  const { page = 1, limit = 50, type } = req.query
+  const skip = (parseInt(page) -1) * parseInt(limit)
+  const cacheKey = `transactions:${userId}:page=${page}:limit=${limit}:type=${type || "All"}`
+  
   try {
-    const account = await Account.findOne({ user: userId }).populate("transactions").lean()
-    if (!account) return res.status(404).json({ error: "Account not found" })
-    return res.status(200).json({ suceess: true, transactions: account })
+    const cached = await redis.get(cacheKey)
+    if(cached) return res.status(200).json({ success: true, transactions: JSON.parse(cached), cached: true })
+    
+    const query = { user: userId }
+    if (type && type !== "All") query.type = type
+
+    const transactions = await Transaction.find(query).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)).lean()
+    if (transactions.length === 0) return res.status(404).json({ success: false, message: "Transactions not found" })
+
+    await redis.set(cacheKey, JSON.stringify(transactions), "EX", 120)
+    return res.status(200).json({ success: true, transactions, cached: false })
   } catch (error) {
     return res.status(500).json({ success: false, error: "Internal server error" })
   }
@@ -97,31 +111,6 @@ const buyDataSubcription = async (req, res) => {
   }
 }
 
-
-const getAllDataTransactions = async (req, res) => {
-  const { userId } = req.params
-  try {
-    const account = await Account.findOne({ user: userId }).populate("transactions")
-    if (!account) return res.status(404).json({ error: "Account not found" })
-
-    const dataTransactions = account.transactions.filter(t => t.type === "data")
-    return res.status(200).json(dataTransactions)
-  } catch (error) {
-    return res.status(500).json({ success: false, error: "Internal server error" })
-  }
-}
-
-const queryDataTransaction = async (req, res) => {
-  const { userId, transactionId } = req.params
-  try {
-    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "data" }).lean()
-    if (!transaction) return res.status(404).json({ error: "Data transaction not found" })
-    return res.status(200).json(transaction)
-  } catch (error) {
-    return res.status(500).json({ success: false, error: "Internal server error" })
-  }
-}
-
 const buyAirtimeSubscription = async (req, res) => {
   logger.info("Received request for airtime subscription")
   const { network, phone, amount } = req.body
@@ -197,17 +186,6 @@ const buyAirtimeSubscription = async (req, res) => {
   }
 }
 
-const queryAirtimeTransaction = async (req, res) => {
-  const { userId, transactionId } = req.params
-  try {
-    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "airtime" }).lean()
-    if (!transaction) return res.status(404).json({ error: "Airtime transaction not found" })
-    return res.status(200).json(transaction)
-  } catch (error) {
-    return res.status(500).json({ success: false, error: "Internal server error" })
-  }
-}
-
 const payElectricityBills = async (req, res) => {
   const { disco_name, meter_number, meter_type, amount } = req.body
   const userId = req.user._id
@@ -279,17 +257,6 @@ const payElectricityBills = async (req, res) => {
   }
 }
 
-const queryElectricityBill = async (req, res) => {
-  const { userId, transactionId } = req.params
-  try {
-    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "electricity" }).lean()
-    if (!transaction) return res.status(404).json({ error: "Electricity transaction not found" })
-    return res.status(200).json(transaction)
-  } catch (error) {
-    return res.status(500).json({ success: false, error: "Internal server error" })
-  }
-}
-
 const buyCableSubscription = async (req, res) => {
   const { cable_name, smart_card_number, variation } = req.body
   const userId = req.user._id
@@ -353,17 +320,6 @@ const buyCableSubscription = async (req, res) => {
         date: Date.now()
       }
     })
-    return res.status(500).json({ success: false, error: "Internal server error" })
-  }
-}
-
-const queryCableSubscription = async (req, res) => {
-  const { userId, transactionId } = req.params
-  try {
-    const transaction = await Transaction.findOne({ _id: transactionId, user: userId, type: "cable" }).lean()
-    if (!transaction) return res.status(404).json({ error: "Cable transaction not found" })
-    return res.status(200).json(transaction)
-  } catch (error) {
     return res.status(500).json({ success: false, error: "Internal server error" })
   }
 }
@@ -460,18 +416,72 @@ const purchaseBulkSms = async (req, res) => {
   }
 }
 
+const resultCheck = async (req, res) => {
+  logger.info("Result check endpoint hit")
+  try {
+    const { quantity, service, product_code } = req.body
+    const userId = req.user._id
+
+    if (!quantity || !service || !product_code) {
+      return res.status(400).json({ success: false, error: "Quantity, service, and product code are required" })
+    }
+
+    const account = await Account.findOne({ user: userId }) 
+    if(!account) return res.status(404).json({ success: false, error: "Account not found" })
+
+    if (account.wallet_balance < 100) {
+      return res.status(400).json({ success: false, error: "Insufficient wallet balance" })
+    }
+
+    const response = await axios.get(`${process.env.VTU_AFRICA_DOMAIN}-test/exam-pin/`, {
+      params: {  
+        apikey: process.env.VTUAFRICA_API_KEY,
+        service: service,
+        product_code: product_code,
+        quantity: quantity,
+        ref: `REF_${Date.now()}` 
+      },
+      paramsSerializer: params => {
+        return Object.entries(params).map(([key, val]) => `${key}=${encodeURIComponent(val)}`).join('&');
+      }
+    })
+
+    if(response.data.code === 102) {
+      logger.info("Bulk SMS response:", response.data.description.message)
+      return res.status(402).json({ success: false, error: response.data.description.message })
+    }
+
+    account.wallet_balance -= Number(response.data.description.Amount_Charged)
+    account.total_spent += Number(response.data.description.Amount_Charged)
+    const transaction = await Transaction.create({
+      user: userId,
+      type: "result-checker",
+      amount: -Number(response.data.description.Amount_Charged),
+      status: "success",
+      reference: `RESULT_CHECKER_${nanoid()}`,
+      metadata: {
+        receipients: phone_numbers,
+        date: Date.now(),
+        pins: response.data.description.pins
+      }
+    })
+    account.transactions.push(transaction._id)
+    await account.save()
+    return res.status(200).json({ success: true, message: "Result checked successfully", pins: response.data.description.pins, charge: Number(response.data.description.Amount_Charged), })
+  } catch (error){
+    console.error("Failed to send bulk SMS", error.message)
+    return res.status(500).json({ success: false, error })
+  }
+}
+
 
 export {
   getAllTransactions,
   buyDataSubcription,
-  getAllDataTransactions,
-  queryDataTransaction,
   buyAirtimeSubscription,
-  queryAirtimeTransaction,
   payElectricityBills,
-  queryElectricityBill,
   buyCableSubscription,
-  queryCableSubscription,
   purchaseAirtime2Cash,
-  purchaseBulkSms
+  purchaseBulkSms,
+  resultCheck
 }

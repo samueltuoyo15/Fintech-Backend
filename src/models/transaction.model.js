@@ -8,7 +8,7 @@ const transactionSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ["data", "bulk_sms", "airtime-2-cash", "airtime", "electricity", "cable", "funding", "referral"],
+    enum: ["data", "bulk_sms", "airtime-2-cash", "airtime", "electricity", "cable", "funding", "result-checker", "referral"],
     required: true
   },
   amount: {
@@ -26,6 +26,9 @@ const transactionSchema = new mongoose.Schema({
     required: true
   }
 }, { timestamps: true })
+
+transactionSchema.index({ user: 1, type: 1, createdAt: -1 })
+transactionSchema.index({ reference: 1 }, { unique: true })
 
 const Transaction = mongoose.models.Transaction || mongoose.model("Transaction", transactionSchema)
 

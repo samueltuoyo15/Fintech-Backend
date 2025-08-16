@@ -13,10 +13,7 @@ const getUserDetails = async (req, res) => {
         }
         
         const user = await User.findById(userId).populate({
-            path: "account",
-            populate: {
-                path: "transactions"
-            }
+            path: "account"
         }).lean()
 
         if (!user) {

@@ -16,6 +16,7 @@ const redis = new Redis(REDIS_URL, {
   },
   maxRetriesPerRequest: null, 
 })
+
 redis.on("connect", () => logger.info("Connected to Redis"))
 redis.on("error", (err) => logger.error("Redis Error:", err))
 redis.on("close", () => logger.warn("Redis Connection Closed"))

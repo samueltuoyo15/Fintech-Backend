@@ -229,4 +229,17 @@ const cablePlans = [
   { name: "startimes_unique", price: 0.0 },
 ]
 
-export { dataPlans, electricityPlanList, cablePlans }
+const checkResultPlans = [
+  { description: "WAEC Result Checking PIN", code: 1 },
+  { description: "WAEC GCE Registration PIN", code: 2 },
+  { description: "WAEC Verification PIN", code: 3 },
+  { description: "NECO Result Checking Token", code: 1 },
+  { description: "NECO GCE Registration PIN", code: 2 },
+  { description: "NABTEB Result Checking PIN", code: 1 },
+  { description: "NABTEB GCE Registration PIN", code: 2 },
+  { description: "JAMB UTME Registration PIN", code: 1 },
+  { description: "JAMB Direct Entry Registration PIN", code: 2 }
+]
+
+
+export { dataPlans, electricityPlanList, cablePlans, checkResultPlans }
