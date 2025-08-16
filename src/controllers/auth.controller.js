@@ -5,6 +5,7 @@ import RefreshToken from "../models/refresh.token.model.js"
 import sendEmailVerification from "../services/email.service.js"
 import { generateAccessToken, generateRefreshToken, generateMailToken } from "../common/utils/generate.token.js"
 import jwt from "jsonwebtoken"
+import Transaction from "../models/transaction.model.js"
 
 const registerUser = async (req, res) => {
   logger.info("Registering new user endpoint hit!")
@@ -53,14 +54,25 @@ const registerUser = async (req, res) => {
         if (referrerAccount) {
           referrerAccount.total_referral += 1
           referrerAccount.total_referral_bonus += 1
-          referrerAccount.wallet_balance += 1
+          await Transaction.create({
+            type: "referral",
+            user: referrer._id,
+            amount: 0,
+            status: "success",
+            reference: `REFERRER_${nanoid()}`,
+            metadata: {
+              referee_username: username,
+              referree_email: email,
+              referree_full_name: full_name
+            }
+          })
           await referrerAccount.save()
         }
       }
     }
 
     logger.debug("New user created successfully")
-    return res.status(201).json({ success: true, message: "User registered successfully. Kindly check you email and verify your account" })
+    return res.status(201).json({ success: true, message: "User registered successfully. Kindly check you email(inbox or spam) and verify your account" })
   } catch (error) {
     console.error("Error registering user:", error)
     return res.status(500).json({ success: false, error: "Internal server error" })

@@ -3,10 +3,42 @@ import Account from "../models/account.model.js"
 import Transaction from "../models/transaction.model.js"
 import { nanoid } from "nanoid"
 import axios from "axios"
+import { redis } from "../common/config/redis.config.js"
 import dotenv from "dotenv"
 dotenv.config()
 
-import { redis } from "../common/config/redis.config.js"
+const getAllReferrals = async (req, res) => {
+  const userId = req.user._id
+  const { page = 1, limit = 10, search = "" } = req.query
+  const skip = (parseInt(page) - 1) * parseInt(limit)
+  const cacheKey = `referrals:${userId}:page=${page}:limit=${limit}:search=${search}`
+
+  try {
+    const cached = await redis.get(cacheKey)
+    if (cached) return res.status(200).json({ success: true, referrals: JSON.parse(cached), total: JSON.parse(cached).length, cached: true })
+
+    const searchQuery = search ? { "metadata.referee_username": { $regex: search, $options: "i" } } : {}
+
+    const referrals = await Transaction.find({ user: userId, type: "referral", ...searchQuery }).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)).lean()
+    const total = await Transaction.countDocuments({ user: userId, type: "referral", ...searchQuery })
+
+    if (!referrals.length) return res.status(404).json({ success: false, message: "No referrals found" })
+
+    const mappedReferrals = referrals.map(r => ({
+      username: r.metadata?.referee_username || "N/A",
+      email: r.metadata?.referree_email || "N/A",
+      full_name: r.metadata?.referre_full_name || "N/A"
+    }))
+
+    await redis.set(cacheKey, JSON.stringify(mappedReferrals), "EX", 300)
+
+    return res.status(200).json({ success: true, referrals: mappedReferrals, total, cached: false })
+  } catch (error) {
+    console.error("Error fetching referrals:", error)
+    return res.status(500).json({ success: false, error: "Internal server error" })
+  }
+}
+
 
 const getAllTransactions = async (req, res) => {
   const userId = req.user._id
@@ -40,7 +72,6 @@ const buyDataSubcription = async (req, res) => {
   if (!phone || !network || !plan_amount || !service) {
     return res.status(400).json({ error: "Network, phone service and plan_amount are required" })
   }
-
 
   try {
     const account = await Account.findOne({ user: userId })
@@ -433,7 +464,7 @@ const resultCheck = async (req, res) => {
       return res.status(400).json({ success: false, error: "Insufficient wallet balance" })
     }
 
-    const response = await axios.get(`${process.env.VTU_AFRICA_DOMAIN}-test/exam-pin/`, {
+    const response = await axios.get(`${process.env.VTU_AFRICA_DOMAIN}/exam-pin/`, {
       params: {  
         apikey: process.env.VTUAFRICA_API_KEY,
         service: service,
@@ -448,7 +479,7 @@ const resultCheck = async (req, res) => {
 
     if(response.data.code === 102) {
       logger.info("Bulk SMS response:", response.data.description.message)
-      return res.status(402).json({ success: false, error: response.data.description.message })
+      return res.status(402).json({ success: false, error: "Kindly bear with us till we fund result checking api" })
     }
 
     account.wallet_balance -= Number(response.data.description.Amount_Charged)
@@ -462,6 +493,65 @@ const resultCheck = async (req, res) => {
       metadata: {
         receipients: phone_numbers,
         date: Date.now(),
+        pins: response.data.description.pins,
+        quantity: quantity
+      }
+    })
+    account.transactions.push(transaction._id)
+    await account.save()
+    return res.status(200).json({ success: true, message: "Result checked successfully", pins: response.data.description.pins, charge: Number(response.data.description.Amount_Charged), })
+  } catch (error){
+    console.error("Failed to send bulk SMS", error.message)
+    return res.status(500).json({ success: false, error })
+  }
+}
+
+const rechargeCardPins = async (req, res) => {
+  logger.info("recharge check endpoint hit")
+  try {
+    const { network, quantity, variation } = req.body
+    const userId = req.user._id
+
+    if (!quantity || !network || !variation) {
+      return res.status(400).json({ success: false, error: "Quantity, network, and variation are required" })
+    }
+
+    const account = await Account.findOne({ user: userId }) 
+    if(!account) return res.status(404).json({ success: false, error: "Account not found" })
+
+    if (account.wallet_balance < 100) {
+      return res.status(400).json({ success: false, error: "Insufficient wallet balance" })
+    }
+    const response = await axios.get(`${process.env.VTU_AFRICA_DOMAIN}/airtime-pin/`, {
+      params: {  
+        apikey: process.env.VTUAFRICA_API_KEY,
+        network: network,
+        variation: variation,
+        quantity: quantity,
+        ref: `REF_${Date.now()}` 
+      },
+      paramsSerializer: params => {
+        return Object.entries(params).map(([key, val]) => `${key}=${encodeURIComponent(val)}`).join('&');
+      }
+    })
+
+    if(response.data.code === 102) {
+      logger.info("Bulk SMS response:", response.data.description.message)
+      return res.status(402).json({ success: false, error: "Kindly bear with us till we fund our api" })
+    }
+     console.log(response.data.description)
+    account.wallet_balance -= Number(response.data.description.Amount_Charged)
+    account.total_spent += Number(response.data.description.Amount_Charged)
+    const transaction = await Transaction.create({
+      user: userId,
+      type: "recharge-card-pin",
+      amount: -Number(response.data.description.Amount_Charged),
+      status: "success",
+      reference: `RECHARGE_CARD_PIN_${nanoid()}`,
+      metadata: {
+        network,
+        date: Date.now(),
+        quantity,
         pins: response.data.description.pins
       }
     })
@@ -477,11 +567,13 @@ const resultCheck = async (req, res) => {
 
 export {
   getAllTransactions,
+  getAllReferrals,
   buyDataSubcription,
   buyAirtimeSubscription,
   payElectricityBills,
   buyCableSubscription,
   purchaseAirtime2Cash,
   purchaseBulkSms,
-  resultCheck
+  resultCheck,
+  rechargeCardPins
 }
