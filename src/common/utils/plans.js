@@ -194,5 +194,39 @@ const electricityPlanList = [
   { serviceCode: "yola-electric", displayName: "Yola Electricity Distribution Company" }
 ]
 
+const cablePlans = [
+  { name: "gotv_smallie", price: 1900 },
+  { name: "gotv_smallie_3months", price: 5100 },
+  { name: "gotv_smallie_1year", price: 15000 },
+  { name: "gotv_jinja", price: 3900 },
+  { name: "gotv_jolli", price: 5800 },
+  { name: "gotv_max", price: 8500 },
+  { name: "dstv_padi", price: 4400 },
+  { name: "dstv_yanga", price: 6000 },
+  { name: "dstv_confam", price: 11000 },
+  { name: "dstv_compact", price: 19000 },
+  { name: "dstv_compact_plus", price: 30000 },
+  { name: "dstv_premium", price: 44500 },
+  { name: "dstv_asia", price: 14900 },
+  { name: "dstv_premium_french", price: 69000 },
+  { name: "startimes_nova_daily", price: 0.0 },
+  { name: "startimes_nova_weekly", price: 600 },
+  { name: "startimes_nova", price: 1900 },
+  { name: "startimes_basic_daily", price: 0.0 },
+  { name: "startimes_basic_weekly", price: 1250 },
+  { name: "startimes_basic", price: 3700 },
+  { name: "startimes_smart_daily", price: 0.0 },
+  { name: "startimes_smart_weekly", price: 1550 },
+  { name: "startimes_smart", price: 4700 },
+  { name: "startimes_classic_daily", price: 0.0 },
+  { name: "startimes_classic_weekly", price: 1900 },
+  { name: "startimes_classic", price: 5500 },
+  { name: "startimes_super_daily", price: 0.0 },
+  { name: "startimes_super_weekly", price: 3000 },
+  { name: "startimes_super", price: 9000 },
+  { name: "startimes_unique_daily", price: 0.0 },
+  { name: "startimes_unique_weekly", price: 0.0 },
+  { name: "startimes_unique", price: 0.0 },
+]
 
-export { dataPlans, electricityPlanList }
+export { dataPlans, electricityPlanList, cablePlans }

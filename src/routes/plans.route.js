@@ -1,4 +1,4 @@
-import { dataPlans, electricityPlanList } from "../common/utils/plans.js"
+import { cablePlans, dataPlans, electricityPlanList } from "../common/utils/plans.js"
 import { Router } from "express"
 import { redis } from "../common/config/redis.config.js"
 
@@ -43,7 +43,73 @@ router.get("/data-plans", async (req, res) => {
     })
 })
 
-router.get("/electricity-plans", async (req, res) => {
+router.get("/cable-plans", async (req, res) => {
+    const { variation } = req.query
+    const cacheKey = variation ? `cablePlans:${variation}` : `cablePlans`
+    const cachedCablePlans = await redis.get(cacheKey)
+    if (cachedCablePlans) {
+        return res.status(200).json({
+            success: true,
+            message: "Cable plans retrieved successfully",
+            source: "redis-cache",
+            data: JSON.parse(cachedCablePlans)
+        })
+    }
+
+    let result = cablePlans
+    if (variation) {
+       const cableServiceMap = {
+        DSTV: [
+            { name: "dstv_padi" },
+            { name: "dstv_yanga" },
+            { name: "dstv_confam" },
+            { name: "dstv_compact" },
+            { name: "dstv_compact_plus" },
+            { name: "dstv_premium" },
+            { name: "dstv_premium_asia" },
+            { name: "dstv_premium_french" },
+            { name: "dstv_asia_addon" },
+            { name: "dstv_french_addon" }
+        ],
+        GOTV: [
+            { name: "gotv_smallie" },
+            { name: "gotv_jinja" },
+            { name: "gotv_jolli" },
+            { name: "gotv_max" },
+            { name: "gotv_supa" }
+        ],
+        STARTIMES: [
+            { name: "startimes_smart_weekly" },
+            { name: "startimes_smart_monthly" },
+            { name: "startimes_super_weekly" },
+            { name: "startimes_super_monthly" },
+            { name: "startimes_nova_monthly" },
+            { name: "startimes_nova_weekly" },
+            { name: "startimes_classic_monthly" },
+            { name: "startimes_classic_weekly" },
+            { name: "startimes_basic_monthly" },
+            { name: "startimes_basic_weekly" }
+        ]
+        }
+
+        
+        result = cablePlans.filter(plan =>
+            cableServiceMap[variation]?.some(prefix =>
+                plan.name?.toUpperCase().trim().startsWith(prefix.name.toUpperCase().trim())
+            )
+        )
+    }
+
+    await redis.set(cacheKey, JSON.stringify(result), "EX", 10)
+
+    return res.status(200).json({
+        success: true,
+        message: "List of Data Plans",
+        data: result
+    })
+})
+
+router.get("/electricity-plans", async (_req, res) => {
     const cacheKey = `electricityPlans`
     const cachedElectricityPlans = await redis.get(cacheKey)
     if (cachedElectricityPlans) {

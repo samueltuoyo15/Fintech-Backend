@@ -453,7 +453,7 @@ const purchaseBulkSms = async (req, res) => {
     })
     account.transactions.push(transaction._id)
       await account.save()
-    return res.status(200).json({ success: true, data: "Message sent successfully to all the provided numbers", charge: totalCharge, })
+    return res.status(200).json({ success: true, message: "Message sent successfully to all the provided numbers", charge: totalCharge, })
   } catch (error){
     console.error("Failed to send bulk SMS", error.message)
     return res.status(500).json({ success: false, error })
