@@ -12,9 +12,10 @@ const buyAirtime2CashValidationSchema = joi.object({
     "any.required": "phone number is required"
   }),
 
-  amount: joi.number().required().messages({
+  amount: joi.number().max(500).required().messages({
     "number.base": "amount must be a number (e.g., 200, 500, 1000)",
-    "any.required": "amount is required"
+    "any.required": "amount is required",
+    "number.max": "amount cannot be more than 500"
   })
 })
 

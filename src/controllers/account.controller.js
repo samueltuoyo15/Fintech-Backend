@@ -354,34 +354,7 @@ const buyCableSubscription = async (req, res) => {
     return res.status(500).json({ success: false, error: "Internal server error" })
   }
 }
-
-const purchaseAirtime2Cash = async (req, res) => {
-  logger.info("Airtme to cash endpoint hit")
-
-  const { network, phone_number, amount, } = req.body
-  const userId = req.user._id
-  if(!network || !phone_number || !amount){
-    return res.status(400).json({ success: false, error: "Incomplete Request Body"})
-  }
-  try {
-
-    const account = await Account.findOne({ user: userId }).populate("user")
-
-    if (!account) return res.status(404).json({ error: "Account not found" })
-
-    if (account.wallet_balance < amount) {
-      return res.status(400).json({ error: "Insufficient wallet balance." })
-    }
-
-    // const response = await axios.get(`https://vtuafrica.com.ng/portal/api-test/airtime-cash/?apikey=${process.env.VTUAFRICA_API_KEY}&network=${network}&sender=${account.user.email}&sendernumber=${phone_number}&amount=${amount}&sitephone=${process.env.VTUAFRICA_AIRTME2_CASH_PHONE_NUMBER}&ref=${"REF_" + nanoid()}&webhookURL=http://testlink.com/webhook/`)
-    // console.log(response.data)
-    return res.status(200).json({ success: true, message: "Airtime to Cash was successful!"})
-  } catch(error){
-    logger.error("Failed to purchase airtime to cash service")
-    return res.status(500).json({ success: false, error: "Failed to purchase airtme to cash service"})
-  }
-}
-
+ 
 const purchaseBulkSms = async (req, res) => {
   logger.info("Bulk SMS endpoint hit")
   try {
@@ -439,7 +412,7 @@ const purchaseBulkSms = async (req, res) => {
       }
     })
     account.transactions.push(transaction._id)
-      await account.save()
+   await account.save()
     return res.status(200).json({ success: true, message: "Message sent successfully to all the provided numbers", charge: totalCharge, })
   } catch (error){
     console.error("Failed to send bulk SMS", error.message)
@@ -572,7 +545,6 @@ export {
   buyAirtimeSubscription,
   payElectricityBills,
   buyCableSubscription,
-  purchaseAirtime2Cash,
   purchaseBulkSms,
   resultCheck,
   rechargeCardPins
