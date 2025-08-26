@@ -19,7 +19,8 @@ const app = express()
 
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://ife-global-jkv6.vercel.app" 
+  "https://ife-global-jkv6.vercel.app",
+  "https://ife-elroiglobal.com"
 ]
 
 app.use(cors({
