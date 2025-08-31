@@ -1,17 +1,19 @@
-import joi from "joi"
+import Joi from "joi"
 
-const cableValidationSchema = joi.object({
-  cable_name: joi.string().required().messages({
+const cableValidationSchema = Joi.object({
+  cable_name: Joi.string().required().messages({
+    "any.only": "Cable name must be one of GOtv, Dstv, and ecetera..",
     "string.base": "Cable name must be a string",
     "any.required": "Cable name is reaquired"
   }),
 
-  variation: joi.string().required().messages({
-    "string.base": "Variation must be a string",
-    "any.required": "Variation is reaquired"
+  cable_plan: Joi.string().valid("basic", "premium").required().messages({
+    "any.only": "Cable plan type must be one of basic or premium",
+    "string.base": "Cable plan type must be a string",
+    "any.required": "Cable plan type is reaquired"
   }),
 
-  smart_card_number: joi.number().required().messages({
+  smart_card_number: Joi.number().required().messages({
     "number.base": "Smart card number must be a number",
     "any.required": "Smart card number is required"
   })

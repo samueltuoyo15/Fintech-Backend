@@ -1,11 +1,10 @@
 import { Router } from "express"
-import { getAllTransactions, buyDataSubcription, buyAirtimeSubscription, payElectricityBills, buyCableSubscription, purchaseBulkSms, resultCheck, getAllReferrals, rechargeCardPins } from "../controllers/account.controller.js"
+import { getAllTransactions, validateMeter, validateUIC, buyDataSubcription, buyAirtimeSubscription, payElectricityBills, buyCableSubscription, purchaseBulkSms, resultCheck, getAllReferrals, rechargeCardPins } from "../controllers/account.controller.js"
 import { authenticateUser } from "../middlewares/auth.middleware.js"
 import validateDataReqBody from "../middlewares/data.schema.js"
 import validateAirtimeReqBody from "../middlewares/airtime.schema.js"
 import validateElectricityReqBody from "../middlewares/electricity.schema.js"
 import validateCableReqBody from "../middlewares/cable.schema.js"
-import { createBasicRateLimiter } from "../middlewares/rate.limit.js"
 
 const router = Router()
 router.get("/transactions", authenticateUser, getAllTransactions)
@@ -17,6 +16,7 @@ router.post("/recharge-card-pins", authenticateUser, rechargeCardPins)
 router.post("/bulk-sms", authenticateUser, purchaseBulkSms)
 router.post("/buy-result-checker", authenticateUser, resultCheck)
 router.post("/cable", authenticateUser, validateCableReqBody, buyCableSubscription)
-
+router.get("/validate-uic/:smart_card_number/:cable_name", authenticateUser, validateUIC)
+router.get("/validate-meter/:meter_number/:disco_name/:meter_type", authenticateUser, validateMeter)
 
 export default router

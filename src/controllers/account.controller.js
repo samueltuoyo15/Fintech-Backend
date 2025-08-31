@@ -216,9 +216,8 @@ const buyAirtimeSubscription = async (req, res) => {
 }
 
 const payElectricityBills = async (req, res) => {
-  const { disco_name, meter_number, meter_type, amount } = req.body
+  const { disco_name, amount, meter_number, meter_type } = req.body
   const userId = req.user._id
- const paymentRef = "REF_" + nanoid()
   if (!disco_name || !amount || !meter_number || !meter_type) {
     return res.status(400).json({ error: "Disco name, amount, meter number, and meter type are required" })
   }
@@ -234,125 +233,128 @@ const payElectricityBills = async (req, res) => {
       return res.status(400).json({ error: "Insufficient wallet balance." })
     }
 
-     const response = await axios.get(`${process.env.VTU_AFRICA_DOMAIN}/electric/`, {
-      params: {  
-        apikey: process.env.VTUAFRICA_API_KEY,
-        service: disco_name,
-        meterNo: meter_number,
-        metertype: meter_type,
-        amount,
-        ref: `REF_${Date.now()}` 
-      },
-      paramsSerializer: params => {
-        return Object.entries(params).map(([key, val]) => `${key}=${encodeURIComponent(val)}`).join('&');
+    const response = await axios.post(`${process.env.EXTERNAL_BACKEND_DOMAIN}/billpayment`, {
+      disco_name,
+      amount,
+      meter_number,
+      meter_type
+    }, {
+      headers: {
+        Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
       }
     })
-      console.log("Electircity bill payment", response.data.description)
+
       account.wallet_balance -= amount
-      account.total_spent += amount
+      account.total_funding += amount
+      const paymentRef = "REF_" + nanoid()
+
       const transaction = await Transaction.create({
         user: userId,
         type: "electricity",
         amount: amount,
         status: "success",
         reference: paymentRef,
-        metadata: {
-          date: Date.now(),
-          disco_name,
-          meter_type,
-          meter_number,
-        }
+        metadata: {}
       })
 
       account.transactions.push(transaction._id)
       await account.save()
-      return res.status(200).json({ success: true, message: "electricity bill payment was successful"})
+      return res.status(200).json({ success: true, message: "success"})
   } catch (error) {
-    console.error("error paying electric bills", error)
-     await Transaction.create({
-      user: userId,
-      type: "electricity",
-      status: "failed",
-      amount,
-      reference: paymentRef,
-      metadata: {
-        disco_name,
-        meter_type,
-        meter_number,
-        date: Date.now()
-      }
-    })
     return res.status(500).json({ success: false, error: "Internal server error" })
   }
 }
 
 const buyCableSubscription = async (req, res) => {
-  const { cable_name, smart_card_number, variation } = req.body
+  const { cable_name, cable_plan, smart_card_number, amount } = req.body
   const userId = req.user._id
-   const paymentRef = "REF_" + nanoid()
-  if (!cable_name || !smart_card_number || !variation) {
-    return res.status(400).json({ error: "Cable name, cable plan, smart card number, variation, and user ID are required" })
+  if (!cable_name || !cable_plan || !smart_card_number || !amount) {
+    return res.status(400).json({ error: "Cable name, cable plan, smart card number, amount, and user ID are required" })
   }
 
+    if(amount < 100){
+    return res.status(400).json({ error: "Amount must be greater than 100NGN"})
+  }
+  
   try {
     const account = await Account.findOne({ user: userId })
     if (!account) return res.status(404).json({ error: "Account not found" })
 
-    if (account.wallet_balance < 100) {
+    if (account.wallet_balance < amount) {
       return res.status(400).json({ error: "Insufficient wallet balance." })
     }
 
-    const response = await axios.get(`${process.env.VTU_AFRICA_DOMAIN}/merchant-verify`, {
-      params: {
-      apikey: process.env.VTUAFRICA_API_KEY,
-      serviceName: "CableTV",
-      service: cable_name,
-      smartNo: smart_card_number,
-      variation,
-      },
-       paramsSerializer: params => {
-        return Object.entries(params).map(([key, val]) => `${key}=${encodeURIComponent(val)}`).join('&');
-      }   
+    const response = await axios.post(`${process.env.EXTERNAL_BACKEND_DOMAIN}/cablesub`, {
+      cable_name,
+      cable_plan,
+      smart_card_number
+    }, {
+      headers: {
+        Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
+      }
     })
 
-      console.log("Cable tv response", response.data)
-      account.wallet_balance -= Number(selectedPlan.amount)
-      account.total_spent += Number(response.data.description.Amount_Charged)
+    if (response.status === 201) {
+      account.wallet_balance -= amount
+      account.total_funding += amount
+      const paymentRef = "REF_" + nanoid()
+
       const transaction = await Transaction.create({
         user: userId,
         type: "cable",
-        amount: Number(response.data.description.Amount_Charged),
+        amount: amount,
         status: "success",
         reference: paymentRef,
-        metadata: {
-         cable_name,
-         smart_card_number,
-         product_name: response.data.description.productName,
-         date: Date.now()
-        }
+        metadata: {}
       })
 
       account.transactions.push(transaction._id)
       await account.save()
       return res.status(200).json(response.data)
+    } else {
+      return res.status(response.status).json({ error: "Failed to subscribe to cable" })
+    }
   } catch (error) {
-    console.error("failed to subscribe to cable", error)
-     await Transaction.create({
-      user: userId,
-      type: "cable",
-      status: "failed",
-      amount: 0,
-      reference: paymentRef,
-      metadata: {
-        cable_name,
-        smart_card_number,
-        date: Date.now()
-      }
-    })
     return res.status(500).json({ success: false, error: "Internal server error" })
   }
 }
- 
+
+const validateUIC = async (req, res) => {
+  const { smart_card_number, cable_name } = req.params
+  if (!smart_card_number || !cable_name) {
+    return res.status(400).json({ error: "Smart card number and cable name are required" })
+  }
+  try {
+    const response = await axios.get(`${process.env.EXTERNAL_BACKEND_DOMAIN}/validateiuc?smart_card_number=${smart_card_number}&&cable_name=${cable_name}`, {
+      headers: {
+        Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
+      }
+    })
+    return res.status(200).json(response.data)
+  } catch (error) {
+    return res.status(500).json({ success: false, error: "Internal server error" })
+  }
+}
+
+const validateMeter = async (req, res) => {
+  const { meter_number, disco_name, meter_type } = req.params
+  if (!meter_number || !disco_name || !meter_type) {
+    return res.status(400).json({ error: "Meter number, disco name, and meter type are required" })
+  }
+
+  try {
+    const response = await axios.get(`${process.env.EXTERNAL_BACKEND_DOMAIN}/validatemeter?meternumber=${meter_number}&disconame=${disco_name}&metertype=${meter_type}`, {
+      headers: {
+        Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
+      }
+    })
+
+    return res.status(200).json(response.data)
+  } catch (error) {
+    return res.status(500).json({ success: false, error: "Internal server error" })
+  }
+}
+
 const purchaseBulkSms = async (req, res) => {
   logger.info("Bulk SMS endpoint hit")
   try {
@@ -545,5 +547,7 @@ export {
   buyCableSubscription,
   purchaseBulkSms,
   resultCheck,
-  rechargeCardPins
+  rechargeCardPins,
+  validateMeter,
+  validateUIC
 }
