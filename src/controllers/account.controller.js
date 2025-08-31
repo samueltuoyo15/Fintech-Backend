@@ -4,6 +4,7 @@ import Transaction from "../models/transaction.model.js"
 import { nanoid } from "nanoid"
 import axios from "axios"
 import { redis } from "../common/config/redis.config.js"
+import { dataPlans } from "../common/utils/plans.js"
 import dotenv from "dotenv"
 dotenv.config()
 
@@ -66,67 +67,65 @@ const getAllTransactions = async (req, res) => {
 const buyDataSubcription = async (req, res) => {
   logger.info("Received request for data subscription")
   const paymentRef = "REF_" + nanoid()
-  const { phone, service, plan_amount, network } = req.body
+  const { phone, network_id, id, ported_number } = req.body
   const userId = req.user._id
 
-  if (!phone || !network || !plan_amount || !service) {
-    return res.status(400).json({ error: "Network, phone service and plan_amount are required" })
+  if (!phone || !network_id || !id || !ported_number == null) {
+    return res.status(400).json({ error: "phone, network_id, id, ported_number are required" })
   }
 
   try {
+    const selectedPlan = dataPlans.find(plan => plan.id === id && plan.network_id === network_id)
+    if (!selectedPlan) {
+      return res.status(404).json({ error: "Data plan not found" })
+    }
     const account = await Account.findOne({ user: userId })
     if (!account) return res.status(404).json({ error: "Account not found" })
 
 
-    if (account.wallet_balance < plan_amount) {
+    if (account.wallet_balance < selectedPlan.amount) {
       return res.status(400).json({ error: "Insufficient wallet balance" })
     }
 
-    const response = await axios.get(`${process.env.VTU_AFRICA_DOMAIN}/data/`, {
-      params: {  
-        apikey: process.env.VTUAFRICA_API_KEY,
-        service,
-        MobileNumber: phone,
-        DataPlan: plan_amount,
-        ref: `REF_${Date.now()}`,
-   
-      },
-      paramsSerializer: params => {
-        return Object.entries(params).map(([key, val]) => `${key}=${encodeURIComponent(val)}`).join('&');
+    const response = await axios.post(`${process.env.EXTERNAL_BACKEND_DOMAIN}/data/`, {
+      mobile_number: phone,
+      network: network_id,
+      plan: id,
+      Ported_number: ported_number
+    }, {
+      headers: {
+        Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
       }
     })
-
-    console.log("api response", response.data.description)
-    account.wallet_balance -= response.data.description.Amount_Charged
-    account.total_spent += response.data.description.Amount_Charged
+    account.wallet_balance -= selectedPlan.amount
+    account.total_spent += selectedPlan.amount
 
     const transaction = await Transaction.create({
       user: userId,
       type: "data",
-      amount: response.data.description.Amount_Charged,
+      amount: selectedPlan.amount,
       status: "success",
       reference: paymentRef,
       metadata: {
         status: "successful",
-        plan: `${response.data.description.ProductName} - ${response.data.description.DataSize}`,
-        service: service,
-        plan_amount: Number(response.data.description.Amount_Charged),
-        plan_name: response.data.description.ProductName,
-        date: response.data.description.transaction_date,
+        plan: `${response.data.plan_network} - ${response.data.plan_name}`,
+        plan_amount: selectedPlan.amount,
+        plan_name: response.data.plan_name,
+        date: response.data.create_date,
+        ported_number: ported_number,
       }
     })
 
     account.transactions.push(transaction._id)
     await account.save()
  
-    console.log("Data subscription successful", response.data.description)
-
     return res.status(201).json({
       success: true,
-      message: `You successfully purchased data plan of ${response.data.description.ProductName} - ${response.data.description.DataSize} valid for: ${response.data.description.Validity}`
+      message: `You successfully purchased data plan of ${response.data.plan_network} - ${response.data.plan_name} valid for: ${selectedPlan.validity}`
     })
+  
   } catch (err) {
-    console.error("error buying data:", err)
+    console.error("error buying data:", err.response ? err.response.data : err.message)
     await Transaction.create({
       user: userId,
       type: "data",
@@ -138,23 +137,23 @@ const buyDataSubcription = async (req, res) => {
         date: Date.now()
       }
     })
-    return res.status(500).json({ success: false, error: "Internal server error" })
+    return res.status(500).json({ success: false, error: "internal server error" })
   }
 }
 
 const buyAirtimeSubscription = async (req, res) => {
   logger.info("Received request for airtime subscription")
-  const { network, phone, amount } = req.body
+  const { network_id, phone, amount } = req.body
   const userId = req.user._id
   
    const paymentRef = "REF_" + nanoid()
 
-  if (!network || !phone || !amount) {
-    return res.status(400).json({ error: "Network, phone, airtime type, amount, and ported number are required" })
+  if (!network_id || !phone || !amount) {
+    return res.status(400).json({ error: "Network Id, phone, and amount are required" })
   }
 
-    if(amount < 100){
-    return res.status(400).json({ error: "Amount must be greater than 100NGN"})
+    if(amount < 50){
+    return res.status(400).json({ error: "Amount must be greater than 50NGN"})
   }
 
   try {
@@ -166,19 +165,18 @@ const buyAirtimeSubscription = async (req, res) => {
     }
 
     
-    const response = await axios.get(`${process.env.VTU_AFRICA_DOMAIN}/airtime/`, {
-      params: {  
-        apikey: process.env.VTUAFRICA_API_KEY,
-        network,
-        phone,
-        amount,
-        ref: `REF_${Date.now()}` 
-      },
-      paramsSerializer: params => {
-        return Object.entries(params).map(([key, val]) => `${key}=${encodeURIComponent(val)}`).join('&');
+     const response = await axios.post(`${process.env.EXTERNAL_BACKEND_DOMAIN}/topup/`, {
+      mobile_number: phone,
+      network: network_id,
+      amount,
+      Ported_number: true,
+      airtime_type: "VTU"
+    }, {
+      headers: {
+        Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
       }
     })
-
+    console.log("Airtime response", response.data)
       account.wallet_balance -= amount
       account.total_spent += amount
 
@@ -189,7 +187,7 @@ const buyAirtimeSubscription = async (req, res) => {
         status: "success",
         reference: paymentRef,
         metadata: {
-          network: response.data.network,
+          network: response.data.plan_network,
           date: response.data.create_date
         }
       })
@@ -200,7 +198,7 @@ const buyAirtimeSubscription = async (req, res) => {
       logger.info("airtime sent successfully", response.data)
       return res.status(200).json({ success: true, message: "Airtime sent successfully"})
   } catch (error) {
-    console.error("error buying airtime:", error)
+    console.error("error buying airtime:", error.response.error || error.response.message || error.message)
      await Transaction.create({
       user: userId,
       type: "airtime",
@@ -208,7 +206,7 @@ const buyAirtimeSubscription = async (req, res) => {
       amount,
       reference: paymentRef,
       metadata: {
-        network,
+        network_id,
         phone, 
         date: Date.now()
       }
@@ -318,7 +316,7 @@ const buyCableSubscription = async (req, res) => {
     })
 
       console.log("Cable tv response", response.data)
-      account.wallet_balance -= Number(response.data.description.Amount_Charged)
+      account.wallet_balance -= Number(selectedPlan.amount)
       account.total_spent += Number(response.data.description.Amount_Charged)
       const transaction = await Transaction.create({
         user: userId,
