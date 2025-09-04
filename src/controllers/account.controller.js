@@ -152,8 +152,8 @@ const buyAirtimeSubscription = async (req, res) => {
     return res.status(400).json({ error: "Network Id, phone, and amount are required" })
   }
 
-    if(amount < 50){
-    return res.status(400).json({ error: "Amount must be greater than 50NGN"})
+    if(amount < 100){
+    return res.status(400).json({ error: "Amount must be greater than 100NGN"})
   }
 
   try {
@@ -198,7 +198,7 @@ const buyAirtimeSubscription = async (req, res) => {
       logger.info("airtime sent successfully", response.data)
       return res.status(200).json({ success: true, message: "Airtime sent successfully"})
   } catch (error) {
-    console.error("error buying airtime:", error.response.error || error.response.message || error.message)
+    console.error("error buying airtime:", error?.response.error || error?.message)
      await Transaction.create({
       user: userId,
       type: "airtime",

@@ -9,11 +9,11 @@ const buyDataSubscriptionSchema = Joi.object({
     "boolean.base": "Ported number must be true or false",
     "any.required": "Ported number is required"
   }),
-  network_id: Joi.number().integer().required().messages({
+  network_id: Joi.number().integer().valid(1, 2, 3, 4).required().messages({
     "number.base": "Network ID must be a number",
     "any.required": "Network ID is required"
   }),
-  id: Joi.number().integer().valid(1, 2, 3, 4, 5).required().messages({
+  id: Joi.number().integer().required().messages({
     "number.base": "ID must be a number",
     "any.required": "ID is required"
   })
