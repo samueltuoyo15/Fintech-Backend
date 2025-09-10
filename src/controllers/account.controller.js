@@ -360,11 +360,11 @@ const purchaseBulkSms = async (req, res) => {
   try {
     const { message, phone_numbers } = req.body
     const userId = req.user._id
-
+     
     if (!message || !phone_numbers || phone_numbers.length === 0) {
       return res.status(400).json({ success: false, error: "Message and phone numbers are required" })
     }
-
+    
     const account = await Account.findOne({ user: userId }) 
     if(!account) return res.status(404).json({ success: false, error: "Account not found" })
 
@@ -378,45 +378,39 @@ const purchaseBulkSms = async (req, res) => {
     if (account.wallet_balance < totalCharge) {
       return res.status(400).json({ success: false, error: `Insufficient balance. Required: ${totalCharge}, Available: ${account.wallet_balance}` })
     }
-
-    const response = await axios.get(`${process.env.VTU_AFRICA_DOMAIN}/sms/`, {
-      params: {  
-        apikey: process.env.VTUAFRICA_API_KEY,
-        message: message,
-        sendto: phone_numbers.join(","),
-        sender: "VTUAFRICA",
-        ref: `REF_${Date.now()}` 
-      },
-      paramsSerializer: params => {
-        return Object.entries(params).map(([key, val]) => `${key}=${encodeURIComponent(val)}`).join('&');
+    console.log(req.body)
+     const response = await axios.post(`${process.env.EXTERNAL_BACKEND_DOMAIN}/sendsms/`, {
+      sender: "IFE_GLOBALS",
+      message,
+      DND: "true",
+      receipient: phone_numbers
+    }, {
+      headers: {
+        Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
       }
     })
+    console.log(response.data.message || response.data.error)
 
-    if(response.data.code === 102) {
-      logger.info("Bulk SMS response:", response.data.description.message)
-      return res.status(402).json({ success: false, error: response.data.description.message })
-    }
-
-    account.wallet_balance -= totalCharge
-    account.total_spent += totalCharge
-    const transaction = await Transaction.create({
-      user: userId,
-      type: "bulk_sms",
-      amount: -totalCharge,
-      status: "success",
-      reference: `SMS_${nanoid()}`,
-      metadata: {
-        receipients: phone_numbers,
-        date: Date.now(),
-        message_length: message.length,
-      }
-    })
-    account.transactions.push(transaction._id)
-   await account.save()
-    return res.status(200).json({ success: true, message: "Message sent successfully to all the provided numbers", charge: totalCharge, })
+  //   account.wallet_balance -= totalCharge
+  //   account.total_spent += totalCharge
+  //   const transaction = await Transaction.create({
+  //     user: userId,
+  //     type: "bulk_sms",
+  //     amount: -totalCharge,
+  //     status: "success",
+  //     reference: `SMS_${nanoid()}`,
+  //     metadata: {
+  //       receipients: phone_numbers,
+  //       date: Date.now(),
+  //       message_length: message.length,
+  //     }
+  //   })
+  //   account.transactions.push(transaction._id)
+  //  await account.save()
+    //return res.status(200).json({ success: true, message: "Message sent successfully to all the provided numbers", charge: totalCharge, })
   } catch (error){
-    console.error("Failed to send bulk SMS", error.message)
-    return res.status(500).json({ success: false, error })
+    console.error("Failed to send bulk SMS", error)
+    return res.status(500).json({ success: false, error: error.response.data })
   }
 }
 

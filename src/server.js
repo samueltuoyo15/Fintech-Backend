@@ -11,7 +11,7 @@ import authRoutes from "./routes/auth.route.js"
 import accountRoutes from "./routes/account.route.js"
 import paymentRoutes from "./routes/payment.route.js"
 import plansRoute from "./routes/plans.route.js"
-import "./queues/transaction.worker.js"
+import "./workers/transaction.worker.js"
 import dotenv from "dotenv"
 dotenv.config()
 

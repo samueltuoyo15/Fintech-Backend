@@ -4,7 +4,7 @@ import Transaction from "../models/transaction.model.js"
 import initializeTransaction from "../services/paystack.service.js"
 import { nanoid } from "nanoid"
 import logger from "../common/utils/logger.js"
-import { transactionQueue } from "../queues/transaction.worker.js"
+import { transactionQueue } from "../workers/transaction.worker.js"
 import { paystackConfig } from "../services/paystack.auth.js"
 import dotenv from "dotenv"
 dotenv.config()
