@@ -4,7 +4,7 @@ import Transaction from "../models/transaction.model.js"
 import { nanoid } from "nanoid"
 import axios from "axios"
 import { redis } from "../common/config/redis.config.js"
-import { dataPlans } from "../common/utils/plans.js"
+import { dataPlans, resultCheckerPlans } from "../common/utils/plans.js"
 import dotenv from "dotenv"
 dotenv.config()
 
@@ -417,59 +417,60 @@ const purchaseBulkSms = async (req, res) => {
 const resultCheck = async (req, res) => {
   logger.info("Result check endpoint hit")
   try {
-    const { quantity, service, product_code } = req.body
+    const { quantity, exam_name } = req.body
     const userId = req.user._id
 
-    if (!quantity || !service || !product_code) {
-      return res.status(400).json({ success: false, error: "Quantity, service, and product code are required" })
+    if (!quantity || !exam_name) {
+      return res.status(400).json({ success: false, error: "Quantity, and exam name are required" })
     }
 
+     const selectedPlan = resultCheckerPlans.find(plan => plan.exam_name === exam_name)
+    if (!selectedPlan) {
+      return res.status(404).json({ error: "Plan not found" })
+    }
+      const totalPrice = selectedPlan.price * quantity
+      console.log("Total price:", totalPrice)
     const account = await Account.findOne({ user: userId }) 
     if(!account) return res.status(404).json({ success: false, error: "Account not found" })
 
-    if (account.wallet_balance < 100) {
+    if (account.wallet_balance < totalPrice) {
       return res.status(400).json({ success: false, error: "Insufficient wallet balance" })
     }
-
-    const response = await axios.get(`${process.env.VTU_AFRICA_DOMAIN}/exam-pin/`, {
-      params: {  
-        apikey: process.env.VTUAFRICA_API_KEY,
-        service: service,
-        product_code: product_code,
-        quantity: quantity,
-        ref: `REF_${Date.now()}` 
-      },
-      paramsSerializer: params => {
-        return Object.entries(params).map(([key, val]) => `${key}=${encodeURIComponent(val)}`).join('&');
+  
+    const response = await axios.post(`${process.env.EXTERNAL_BACKEND_DOMAIN}/epin/`, {
+      exam_name,
+      quantity,
+    }, {
+      headers: {
+        Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
       }
     })
+    console.log(response.data.error)
 
-    if(response.data.code === 102) {
-      logger.info("Bulk SMS response:", response.data.description.message)
-      return res.status(402).json({ success: false, error: "Kindly bear with us till we fund result checking api" })
-    }
-
-    account.wallet_balance -= Number(response.data.description.Amount_Charged)
-    account.total_spent += Number(response.data.description.Amount_Charged)
+    account.wallet_balance -= totalPrice
+    account.total_spent += totalPrice
     const transaction = await Transaction.create({
       user: userId,
       type: "result-checker",
-      amount: -Number(response.data.description.Amount_Charged),
+      amount: -totalPrice,
       status: "success",
       reference: `RESULT_CHECKER_${nanoid()}`,
       metadata: {
-        receipients: phone_numbers,
+        exam_name,
         date: Date.now(),
-        pins: response.data.description.pins,
+        //pins: response.data.description.pins,
         quantity: quantity
       }
     })
     account.transactions.push(transaction._id)
     await account.save()
-    return res.status(200).json({ success: true, message: "Result checked successfully", pins: response.data.description.pins, charge: Number(response.data.description.Amount_Charged), })
+    return res.status(200).json({ success: true, message: "Result checked successfully", charge: totalPrice })
   } catch (error){
-    console.error("Failed to send bulk SMS", error.message)
-    return res.status(500).json({ success: false, error })
+    if(error?.response?.data) {
+      console.error("Failed to send epin details", error?.response?.data)
+      return res.status(503).json({ success: false, error: "Service currently unavailable, contact the admin to fund main account" })
+    }
+    return res.status(500).json({ success: false, error: "internal server error" })
   }
 }
 

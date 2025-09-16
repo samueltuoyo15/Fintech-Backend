@@ -192,15 +192,9 @@ const cablePlans = [
 ]
 
 const resultCheckerPlans = [
-  { description: "WAEC Result Checking PIN", service: "waec", code: 1, price: 3850 },
-  { description: "WAEC GCE Registration PIN", service: "waec", code: 2, price: 24000 },
-  { description: "WAEC Verification PIN", service: "waec", code: 3, price: 3850 },
-  { description: "NECO Result Checking Token", service: "neco", code: 1, price: 1250 },
-  { description: "NECO GCE Registration PIN", service: "neco", code: 2, price: 1250 },
-  { description: "NABTEB Result Checking PIN", service: "nabteb", code: 1, price: 1200 },
-  { description: "NABTEB GCE Registration PIN", service: "nabteb", code: 2, price: 1200 },
-  { description: "JAMB UTME Registration PIN", service: "jamb", code: 1, price: 7150 },
-  { description: "JAMB Direct Entry Registration PIN", service: "jamb", code: 2, price: 5600 },
+  { exam_name: "WAEC", price: 3800 },
+  { exam_name: "NABTEB", price: 1400 },
+  { exam_name: "NECO", price: 1500 }
 ]
 
 export { dataPlans, electricityPlans, cablePlans, resultCheckerPlans }
