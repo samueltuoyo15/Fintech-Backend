@@ -58,8 +58,8 @@ const fundAccount = async (req, res) => {
   const { amount } = req.body
   const userId = req.user._id
 
-  if (!amount) {
-    return res.status(400).json({ error: "Amount are required" })
+  if (!amount || typeof amount !== "number" || isNaN(amount)) {
+    return res.status(400).json({ error: "Valid amount is required" })
   }
 
   if(amount < 100){
@@ -69,7 +69,6 @@ const fundAccount = async (req, res) => {
   try {
     
     const userAccount = await Account.findOne({ user: userId }).populate("user")
-    console.log(userAccount)
     if (!userAccount) {
       return res.status(404).json({ error: "Account not found" })
     }
@@ -77,7 +76,7 @@ const fundAccount = async (req, res) => {
     const paymentRef = "REF_" + nanoid()
 
     const response = await initializeTransaction({
-      amount: parseFloat(amount),
+      amount: parseFloat(amount + 50),
       customerEmail: userAccount.user.email,
       paymentReference: paymentRef,
       paymentDescription: "Wallet Funding",
@@ -87,7 +86,7 @@ const fundAccount = async (req, res) => {
     const transaction = await Transaction.create({
       user: userId,
       type: "funding",
-      amount: parseFloat(amount),
+      amount: parseFloat(amount - 50),
       status: "pending",
       reference: paymentRef,
       metadata: {

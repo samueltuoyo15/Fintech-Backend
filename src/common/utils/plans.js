@@ -197,4 +197,20 @@ const resultCheckerPlans = [
   { exam_name: "NECO", price: 1500 }
 ]
 
-export { dataPlans, electricityPlans, cablePlans, resultCheckerPlans }
+const rechargeCardPinPlans = [
+  { plan_id: 1, network_id: 1, network_name: "MTN", amount: 100 },
+  { plan_id: 2, network_id: 1, network_name: "MTN", amount: 200 },
+  { plan_id: 3, network_id: 1, network_name: "MTN", amount: 500 },
+  { plan_id: 4, network_id: 2, network_name: "GLO", amount: 100 },
+  { plan_id: 5, network_id: 2, network_name: "GLO", amount: 200 },
+  { plan_id: 6, network_id: 2, network_name: "GLO", amount: 500 },
+  { plan_id: 7, network_id: 3, network_name: "9MOBILE", amount: 100 },
+  { plan_id: 8, network_id: 3, network_name: "9MOBILE", amount: 200 },
+  { plan_id: 9, network_id: 3, network_name: "9MOBILE", amount: 500 },
+  { plan_id: 10, network_id: 4, network_name: "AIRTEL", amount: 100 },
+  { plan_id: 11, network_id: 4, network_name: "AIRTEL", amount: 200 },
+  { plan_id: 12, network_id: 4, network_name: "AIRTEL", amount: 500 }
+]
+
+
+export { dataPlans, electricityPlans, cablePlans, resultCheckerPlans, rechargeCardPinPlans };

@@ -4,7 +4,7 @@ import Transaction from "../models/transaction.model.js"
 import { nanoid } from "nanoid"
 import axios from "axios"
 import { redis } from "../common/config/redis.config.js"
-import { dataPlans, resultCheckerPlans } from "../common/utils/plans.js"
+import { dataPlans, resultCheckerPlans, rechargeCardPinPlans } from "../common/utils/plans.js"
 import dotenv from "dotenv"
 dotenv.config()
 
@@ -423,6 +423,9 @@ const resultCheck = async (req, res) => {
     if (!quantity || !exam_name) {
       return res.status(400).json({ success: false, error: "Quantity, and exam name are required" })
     }
+      if(quantity < 1){
+    return res.status(400).json({ error: "Quantity must be at least 1"})
+  }
 
      const selectedPlan = resultCheckerPlans.find(plan => plan.exam_name === exam_name)
     if (!selectedPlan) {
@@ -434,7 +437,7 @@ const resultCheck = async (req, res) => {
     if(!account) return res.status(404).json({ success: false, error: "Account not found" })
 
     if (account.wallet_balance < totalPrice) {
-      return res.status(400).json({ success: false, error: "Insufficient wallet balance" })
+      return res.status(400).json({ success: false, error: `Insufficient wallet balance: ${account.wallet_balance.toLocaleString("en-NG", { style: "currency", currency: "NGN"})}` })
     }
   
     const response = await axios.post(`${process.env.EXTERNAL_BACKEND_DOMAIN}/epin/`, {
@@ -464,7 +467,7 @@ const resultCheck = async (req, res) => {
     })
     account.transactions.push(transaction._id)
     await account.save()
-    return res.status(200).json({ success: true, message: "Result checked successfully", charge: totalPrice })
+    return res.status(200).json({ success: true, message: "Result checker pins generated successfully", charge: totalPrice })
   } catch (error){
     if(error?.response?.data) {
       console.error("Failed to send epin details", error?.response?.data)
@@ -477,61 +480,102 @@ const resultCheck = async (req, res) => {
 const rechargeCardPins = async (req, res) => {
   logger.info("recharge check endpoint hit")
   try {
-    const { network, quantity, variation } = req.body
+    const { plan_id, quantity, network_id } = req.body
+    console.log("request received", req.body)
     const userId = req.user._id
 
-    if (!quantity || !network || !variation) {
-      return res.status(400).json({ success: false, error: "Quantity, network, and variation are required" })
+    if (!quantity || !network_id || !plan_id) {
+      return res.status(400).json({ success: false, error: "Quantity, network, and plan are required" })
     }
 
-    const account = await Account.findOne({ user: userId }) 
-    if(!account) return res.status(404).json({ success: false, error: "Account not found" })
+    if (quantity < 1 || quantity > 200) {
+      return res.status(400).json({ error: "Quantity must be between 1 and 200" })
+    }
 
-    if (account.wallet_balance < 100) {
+    const selectedPlan = rechargeCardPinPlans.find(plan => 
+      plan.network_id === network_id && plan.plan_id === plan_id
+    )
+    
+    if (!selectedPlan) {
+      return res.status(404).json({ error: "Plan not found" })
+    }
+
+    const totalPrice = selectedPlan.amount * quantity
+
+    const account = await Account.findOne({ user: userId })
+    if (!account) {
+      return res.status(404).json({ success: false, error: "Account not found" })
+    }
+
+    if (account.wallet_balance < totalPrice) {
       return res.status(400).json({ success: false, error: "Insufficient wallet balance" })
     }
-    const response = await axios.get(`${process.env.VTU_AFRICA_DOMAIN}/airtime-pin/`, {
-      params: {  
-        apikey: process.env.VTUAFRICA_API_KEY,
-        network: network,
-        variation: variation,
-        quantity: quantity,
-        ref: `REF_${Date.now()}` 
-      },
-      paramsSerializer: params => {
-        return Object.entries(params).map(([key, val]) => `${key}=${encodeURIComponent(val)}`).join('&');
-      }
-    })
 
-    if(response.data.code === 102) {
-      logger.info("Bulk SMS response:", response.data.description.message)
-      return res.status(402).json({ success: false, error: "Kindly bear with us till we fund our api" })
-    }
-     console.log(response.data.description)
-    account.wallet_balance -= Number(response.data.description.Amount_Charged)
-    account.total_spent += Number(response.data.description.Amount_Charged)
-    const transaction = await Transaction.create({
-      user: userId,
-      type: "recharge-card-pin",
-      amount: -Number(response.data.description.Amount_Charged),
-      status: "success",
-      reference: `RECHARGE_CARD_PIN_${nanoid()}`,
-      metadata: {
-        network,
-        date: Date.now(),
+    const response = await axios.post(
+      `${process.env.EXTERNAL_BACKEND_DOMAIN}/rechargepin/`,
+      {
+        network_id,
+        network_amount: selectedPlan.plan_id,
         quantity,
-        pins: response.data.description.pins
+        name_on_card: "User Purchase"
+      },
+      {
+        headers: {
+          Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`  
+        }
+      }
+    )
+
+    console.log("External API response:", response.data)
+
+    // account.wallet_balance -= totalPrice
+    // account.total_spent += totalPrice
+
+    // const transaction = await Transaction.create({
+    //   user: userId,
+    //   type: "recharge-card-pin",
+    //   amount: -totalPrice,
+    //   status: "success",
+    //   reference: `RECHARGE_CARD_PIN_${Date.now()}`,
+    //   metadata: {
+    //     network: selectedPlan.network_name,
+    //     date: Date.now(),
+    //     quantity,
+    //     // pins: response.data.pins || response.data.description?.pins,
+    //     // external_reference: response.data.ReferenceID
+    //   }
+    // })
+    
+    // account.transactions.push(transaction._id)
+    // await account.save()
+
+    return res.status(200).json({
+      success: true,
+      message: "Recharge card pins purchased successfully",
+      data: {
+        // pins: response.data.pins || response.data.description?.pins,
+        // ReferenceID: response.data.ReferenceID,
+        amount_charged: totalPrice
       }
     })
-    account.transactions.push(transaction._id)
-    await account.save()
-    return res.status(200).json({ success: true, message: "Result checked successfully", pins: response.data.description.pins, charge: Number(response.data.description.Amount_Charged), })
-  } catch (error){
-    console.error("Failed to send bulk SMS", error.message)
-    return res.status(500).json({ success: false, error })
+  } catch (error) {
+    console.error("Recharge card pin error:", error)
+    
+    if (error?.response?.data) {
+      console.error("External API failed", error.response.data)
+      return res.status(503).json({
+        success: false,
+        error: "Service currently unavailable, contact the admin to fund main account"
+      })
+    }
+    
+    console.error(error)
+    return res.status(500).json({ 
+      success: false, 
+      error: error.message || "Internal server error" 
+    })
   }
 }
-
 
 export {
   getAllTransactions,
