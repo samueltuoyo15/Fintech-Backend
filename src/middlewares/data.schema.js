@@ -5,7 +5,7 @@ const buyDataSubscriptionSchema = Joi.object({
     "string.pattern.base": "Phone must be a valid Nigerian number",
     "any.required": "Phone is required"
   }),
-  ported_number: Joi.boolean().required().messages({
+  Ported_number: Joi.boolean().required().messages({
     "boolean.base": "Ported number must be true or false",
     "any.required": "Ported number is required"
   }),

@@ -67,10 +67,10 @@ const getAllTransactions = async (req, res) => {
 const buyDataSubcription = async (req, res) => {
   logger.info("Received request for data subscription")
   const paymentRef = "REF_" + nanoid()
-  const { phone, network_id, id, ported_number } = req.body
+  const { phone, network_id, id, Ported_number } = req.body
   const userId = req.user._id
 
-  if (!phone || !network_id || !id || !ported_number == null) {
+  if (!phone || !network_id || !id || Ported_number == null) {
     return res.status(400).json({ error: "phone, network_id, id, ported_number are required" })
   }
 
@@ -91,12 +91,17 @@ const buyDataSubcription = async (req, res) => {
       mobile_number: phone,
       network: network_id,
       plan: id,
-      Ported_number: ported_number
+      Ported_number: Ported_number
     }, {
       headers: {
         Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
       }
     })
+
+    if (response.data.error) {
+        console.error("Provider Error:", response.data.error)
+        return res.status(400).json({ success: false, error: response.data.error })
+    }    
     account.wallet_balance -= selectedPlan.amount
     account.total_spent += selectedPlan.amount
 
@@ -112,7 +117,7 @@ const buyDataSubcription = async (req, res) => {
         plan_amount: selectedPlan.amount,
         plan_name: response.data.plan_name,
         date: response.data.create_date,
-        ported_number: ported_number,
+        ported_number: Ported_number,
       }
     })
 
@@ -125,6 +130,7 @@ const buyDataSubcription = async (req, res) => {
     })
   
   } catch (err) {
+    console.log("request body", req.body)
     console.error("error buying data:", err.response ? err.response.data : err.message)
     await Transaction.create({
       user: userId,
@@ -133,7 +139,6 @@ const buyDataSubcription = async (req, res) => {
       amount: 0,
       reference: paymentRef,
       metadata: {
-        service: service,
         date: Date.now()
       }
     })
