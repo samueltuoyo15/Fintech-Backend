@@ -74,6 +74,8 @@ const buyDataSubcription = async (req, res) => {
     return res.status(400).json({ error: "phone, network_id, id, ported_number are required" })
   }
 
+
+
   try {
     const selectedPlan = dataPlans.find(plan => plan.id === id && plan.network_id === network_id)
     if (!selectedPlan) {
@@ -86,7 +88,12 @@ const buyDataSubcription = async (req, res) => {
     if (account.wallet_balance < selectedPlan.amount) {
       return res.status(400).json({ error: "Insufficient wallet balance" })
     }
-
+      console.log({
+    phone,
+    network_id,
+    id,
+    Ported_number
+  })
     const response = await axios.post(`${process.env.EXTERNAL_BACKEND_DOMAIN}/data/`, {
       mobile_number: phone,
       network: network_id,
@@ -102,6 +109,8 @@ const buyDataSubcription = async (req, res) => {
         console.error("Provider Error:", response.data.error)
         return res.status(400).json({ success: false, error: response.data.error })
     }    
+
+    console.log(response)
     account.wallet_balance -= selectedPlan.amount
     account.total_spent += selectedPlan.amount
 
@@ -130,7 +139,6 @@ const buyDataSubcription = async (req, res) => {
     })
   
   } catch (err) {
-    console.log("request body", req.body)
     console.error("error buying data:", err.response ? err.response.data : err.message)
     await Transaction.create({
       user: userId,
@@ -373,48 +381,46 @@ const purchaseBulkSms = async (req, res) => {
     const account = await Account.findOne({ user: userId }) 
     if(!account) return res.status(404).json({ success: false, error: "Account not found" })
 
-    if (account.wallet_balance < 100) {
-      return res.status(400).json({ success: false, error: "Insufficient wallet balance" })
-    }
-
-    const CHARGE_PER_SMS = 4 
-    const totalCharge = CHARGE_PER_SMS * phone_numbers.length
-
-    if (account.wallet_balance < totalCharge) {
+      if (account.wallet_balance < 50) {
       return res.status(400).json({ success: false, error: `Insufficient balance. Required: ${totalCharge}, Available: ${account.wallet_balance}` })
     }
+
+ 
     console.log(req.body)
      const response = await axios.post(`${process.env.EXTERNAL_BACKEND_DOMAIN}/sendsms/`, {
       sender: "IFE_GLOBALS",
+      recetipient: phone_numbers,
       message,
-      DND: "true",
-      receipient: phone_numbers
+      DND: true,
+ 
     }, {
       headers: {
         Authorization: `Token ${process.env.EXTERNAL_BACKEND_API_KEY}`
       }
     })
-    console.log(response.data.message || response.data.error)
+    
+    console.log(response)
 
-  //   account.wallet_balance -= totalCharge
-  //   account.total_spent += totalCharge
-  //   const transaction = await Transaction.create({
-  //     user: userId,
-  //     type: "bulk_sms",
-  //     amount: -totalCharge,
-  //     status: "success",
-  //     reference: `SMS_${nanoid()}`,
-  //     metadata: {
-  //       receipients: phone_numbers,
-  //       date: Date.now(),
-  //       message_length: message.length,
-  //     }
-  //   })
-  //   account.transactions.push(transaction._id)
-  //  await account.save()
-    //return res.status(200).json({ success: true, message: "Message sent successfully to all the provided numbers", charge: totalCharge, })
+    account.wallet_balance -= 4
+    account.total_spent += 4
+    const transaction = await Transaction.create({
+      user: userId,
+      type: "bulk_sms",
+      amount: -4,
+      status: "success",
+      reference: `SMS_${nanoid()}`,
+      metadata: {
+        receipients: phone_numbers,
+        date: Date.now(),
+        message_length: message.length,
+      }
+    })
+    account.transactions.push(transaction._id)
+   await account.save()
+    return res.status(200).json({ success: true, message: "Message sent successfully to all the provided numbers", charge: 4, })
   } catch (error){
-    console.error("Failed to send bulk SMS", error)
+    console.error("failed to send bulk sms:", error)
+  
     return res.status(500).json({ success: false, error: error.response.data })
   }
 }
