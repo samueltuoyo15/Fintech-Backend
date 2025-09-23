@@ -8,6 +8,7 @@ import errorHandler from "./middlewares/error.handler.js"
 import { requestLogger } from "./middlewares/request.logger.js"
 import { connectToDb } from "./common/config/db.config.js"
 import authRoutes from "./routes/auth.route.js"
+import { disconnectRedis } from "./common/config/redis.config.js"
 import accountRoutes from "./routes/account.route.js"
 import paymentRoutes from "./routes/payment.route.js"
 import plansRoute from "./routes/plans.route.js"
@@ -72,7 +73,7 @@ const startServer = async () => {
        logger.info("Self-pinger initialized)")
     })
   } catch (err) {
-    logger.error("Failed to start server:", err)
+    console.error("Failed to start server:", err)
     process.exit(1)
   }
 }
@@ -81,11 +82,11 @@ startServer()
 
 process.on("unhandledRejection", (reason, promise) => {
   disconnectRedis()
-  logger.error("unhandled Rejection at:", promise, "reason:", reason)
+  console.error("unhandled Rejection at:", promise, "reason:", reason)
   process.exit(1)
 })
 
 process.on("uncaughtException", (error) => {
-  logger.error("uncaughtException", error)
+  console.error("uncaughtException", error)
   process.exit(1)
 })

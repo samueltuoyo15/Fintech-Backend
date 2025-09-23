@@ -28,7 +28,6 @@ const transactionSchema = new mongoose.Schema({
 }, { timestamps: true })
 
 transactionSchema.index({ user: 1, type: 1, createdAt: -1 })
-transactionSchema.index({ reference: 1 }, { unique: true })
 
 const Transaction = mongoose.models.Transaction || mongoose.model("Transaction", transactionSchema)
 
