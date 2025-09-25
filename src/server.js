@@ -12,7 +12,7 @@ import { disconnectRedis } from "./common/config/redis.config.js"
 import accountRoutes from "./routes/account.route.js"
 import paymentRoutes from "./routes/payment.route.js"
 import plansRoute from "./routes/plans.route.js"
-import cron from "node-cron"
+// import cron from "node-cron"
 import "./workers/transaction.worker.js"
 import dotenv from "dotenv"
 dotenv.config()
@@ -65,12 +65,12 @@ const startServer = async () => {
     await connectToDb()
     app.listen(process.env.PORT, () => {
       logger.info(`Server running in ${process.env.NODE_ENV} at ${process.env.PORT}`)
-       cron.schedule("*/14 * * * *", () => {
-        const keepAliveUrl = `${process.env.BACKEND_DOMAIN}/api/health`
-        logger.info(`Performing self-ping to: ${keepAliveUrl}`)
-        fetch(keepAliveUrl).then(res => logger.info(`Keep-alive ping successful (Status: ${res.status})`)).catch(err => logger.error("Keep-alive ping failed:", err))
-      })
-       logger.info("Self-pinger initialized)")
+      //  cron.schedule("*/14 * * * *", () => {
+      //   const keepAliveUrl = `${process.env.BACKEND_DOMAIN}/api/health`
+      //   logger.info(`Performing self-ping to: ${keepAliveUrl}`)
+      //   fetch(keepAliveUrl).then(res => logger.info(`Keep-alive ping successful (Status: ${res.status})`)).catch(err => logger.error("Keep-alive ping failed:", err))
+      // })
+      //  logger.info("Self-pinger initialized)")
     })
   } catch (err) {
     console.error("Failed to start server:", err)
