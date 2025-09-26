@@ -1,15 +1,11 @@
 import nodemailer from "nodemailer"
 import logger from "../common/utils/logger.js"
-
-const isEmailValid = (email) => {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return regex.test(email)
-}
+import dotenv from "dotenv"
+dotenv.config()
 
 const sendEmailVerification = async (email, verificationLink) => {
   if (!email) throw new Error("Email is required")
-  if (!isEmailValid(email)) throw new Error("Invalid email format")
-
+ 
   try {
     const transporter = nodemailer.createTransport({
       service: process.env.GMAIL_SERVICE,
