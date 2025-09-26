@@ -1,6 +1,7 @@
 import { Queue, Worker } from "bullmq"
 import { redis } from "../common/config/redis.config.js"
-import sendEmailVerification from "../services/email.service.js"
+import axios from "axios"
+import logger from "../common/utils/logger.js"
 
 export const emailQueue = new Queue("emailQueue", {
     connection: redis,
@@ -9,9 +10,12 @@ export const emailQueue = new Queue("emailQueue", {
 const worker = new Worker("emailQueue", async (job) => {
     try{
         const { email, verificationLink } = job.data
-        await sendEmailVerification(email, verificationLink)
+        const url = `https://fintech-backend-woad.vercel.app/send?email=${encodeURIComponent(email)}&link=${encodeURIComponent(verificationLink)}`
+
+        await axios.get(url)
+        logger.info(`Email sent to ${email} for job ${job.id}`)
     } catch(error){
-        console.error("Worker failed to process job:", error)
+        logger.error("Worker failed to process job:", error)
         throw error
     }
 }, { connection: redis, attempts: 5, backoff: 100000, timeout: 300000 })
