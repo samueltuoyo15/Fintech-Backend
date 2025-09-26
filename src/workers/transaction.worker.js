@@ -34,7 +34,7 @@ const worker = new Worker("transactionQueue", async (job) => {
         logger.error("Worker failed to process job:", error)
         throw error 
     } 
-}, { connection: redis, attempts: 3, backoff: 100000, timeout: 300000 })
+}, { connection: redis, attempts: 5, backoff: 100000, timeout: 300000 })
 
 worker.on("completed", (job) => {
     logger.info(`Job completed: ${job.id}`)

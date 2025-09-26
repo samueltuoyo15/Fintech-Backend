@@ -6,6 +6,7 @@ import sendEmailVerification from "../services/email.service.js"
 import { generateAccessToken, generateRefreshToken, generateMailToken } from "../common/utils/generate.token.js"
 import jwt from "jsonwebtoken"
 import Transaction from "../models/transaction.model.js"
+import { emailQueue } from "../workers/email.worker.js"
 
 const registerUser = async (req, res) => {
   logger.info("Registering new user endpoint hit!")
@@ -45,7 +46,6 @@ const registerUser = async (req, res) => {
 
     const emailToken = generateMailToken(newUser._id, newUser.email)
     const verificationLink = `${process.env.FRONTEND_DOMAIN}/login?token=${emailToken}`
-    await sendEmailVerification(newUser.email, verificationLink)
 
     if (referral_username?.trim() && referral_username.trim() !== username) {
       const referrer = await User.findOne({ username: referral_username.trim() })
@@ -70,6 +70,10 @@ const registerUser = async (req, res) => {
         }
       }
     }
+     await emailQueue.add("process-sending-verification-email", {
+        email: email,
+        verificationLink: verificationLink
+      })
 
     logger.debug("New user created successfully")
     return res.status(201).json({ success: true, message: "User registered successfully. Kindly check you email(inbox or spam) and verify your account" })

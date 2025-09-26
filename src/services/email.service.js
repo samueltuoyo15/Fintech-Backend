@@ -44,9 +44,9 @@ const sendEmailVerification = async (email, verificationLink) => {
         </div>
         `
     })
-    logger.info("email sent successfully")
+    logger.info("email sent successfully to ", email)
   } catch (error) {
-    logger.error(error)
+    console.error(error)
     throw new Error("Error Sending Mail", error)
 
   }
