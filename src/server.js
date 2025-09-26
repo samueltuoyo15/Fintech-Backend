@@ -12,8 +12,8 @@ import { disconnectRedis } from "./common/config/redis.config.js"
 import accountRoutes from "./routes/account.route.js"
 import paymentRoutes from "./routes/payment.route.js"
 import plansRoute from "./routes/plans.route.js"
-// import cron from "node-cron"
 import "./workers/transaction.worker.js"
+// import cron from "node-cron"
 import dotenv from "dotenv"
 dotenv.config()
 
